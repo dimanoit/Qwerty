@@ -11,8 +11,15 @@ namespace Qwerty.DAL.EF
 {
     public class ApplicationContext : IdentityDbContext<ApplicationUser>
     {
-        public ApplicationContext(string ConnectionString) : base(ConnectionString) { }
-        public DbSet<User> Users { get; set; }
+        public ApplicationContext(string ConnectionString) : base(ConnectionString)
+        {
+
+        }
+        public DbSet<User> QUsers { get; set; }
+        public DbSet<Message> Messages { get; set; }
+        public DbSet<FriendshipRequest> Requests { get; set; }
+        public DbSet<UserProfile> Profiles { get; set; }
+        public DbSet<Friend> Friends { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

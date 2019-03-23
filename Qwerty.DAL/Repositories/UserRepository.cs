@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Qwerty.DAL.Interfaces;
 using Qwerty.DAL.Entities;
 using Qwerty.DAL.EF;
+using System.Data.Entity;
 
 namespace Qwerty.DAL.Repositories
 {
@@ -18,22 +19,29 @@ namespace Qwerty.DAL.Repositories
         }
         public void Create(User item)
         {
-            _database.Users.Add(item);
+            _database.QUsers.Add(item);
         }
 
         public void Delete(string id)
         {
-            User boof = _database.
+            User boof = _database.QUsers.Find(id);
+            if (boof != null)
+                _database.QUsers.Remove(boof);
         }
 
         public User Get(string id)
         {
-            throw new NotImplementedException();
+            return _database.QUsers.Find(id);
+        }
+
+        public IEnumerable<User> GetAll()
+        {
+            return _database.QUsers.ToList();
         }
 
         public void Update(User item)
         {
-            throw new NotImplementedException();
+            _database.Entry(item).State = EntityState.Modified;
         }
     }
 }

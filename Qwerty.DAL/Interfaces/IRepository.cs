@@ -12,5 +12,6 @@ namespace Qwerty.DAL.Interfaces
         void Create(TClass item);
         void Update(TClass item);
         void Delete(TId id);
+        IEnumerable<TClass> GetAll();
     }
 }
