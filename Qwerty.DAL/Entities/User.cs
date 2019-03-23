@@ -14,5 +14,10 @@ namespace Qwerty.DAL.Entities
 
         public virtual ApplicationUser ApplicationUser { get; set; }
         public virtual ICollection<Friend> Friends { get; set; }
+        public virtual ICollection<Message> SendMessages { get; set; }
+        public virtual ICollection<Message> RecivedMessage { get; set; }
+
+        public virtual ICollection<FriendshipRequest> ReciveFriendshipRequests { get; set; }
+        public virtual ICollection<FriendshipRequest> SendFriendshipRequests { get; set; }
     }
 }
