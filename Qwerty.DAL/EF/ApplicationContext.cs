@@ -12,6 +12,8 @@ namespace Qwerty.DAL.EF
     public class ApplicationContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationContext(string ConnectionString) : base(ConnectionString) { }
+        public DbSet<User> Users { get; set; }
+
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             #region UserSettings
