@@ -13,7 +13,7 @@ namespace Qwerty.DAL.EF
     {
         public ApplicationContext(string ConnectionString) : base(ConnectionString)
         {
-
+            Database.SetInitializer<ApplicationContext>(new QwertyDbInitializer());
         }
         public DbSet<User> QUsers { get; set; }
         public DbSet<Message> Messages { get; set; }
@@ -27,7 +27,7 @@ namespace Qwerty.DAL.EF
             modelBuilder.Entity<User>().HasKey(x => x.UserId);
             modelBuilder.Entity<User>().Property(x => x.UserId)
                 .HasDatabaseGeneratedOption(System.ComponentModel.DataAnnotations.Schema.DatabaseGeneratedOption.None);
-            modelBuilder.Entity<User>().HasRequired(x => x.ApplicationUser).WithRequiredPrincipal(x => x.User);
+            modelBuilder.Entity<ApplicationUser>().HasRequired(x => x.User).WithRequiredPrincipal(x => x.ApplicationUser);
             modelBuilder.Entity<User>().HasMany(x => x.Friends).WithMany(x => x.Users).Map(m =>
             {
                 m.MapLeftKey("UserId");
@@ -43,13 +43,18 @@ namespace Qwerty.DAL.EF
             modelBuilder.Entity<Message>().HasKey(x => x.IdMessage);
             modelBuilder.Entity<Message>().Property(x => x.IdMessage).
                 HasDatabaseGeneratedOption(System.ComponentModel.DataAnnotations.Schema.DatabaseGeneratedOption.Identity);
-            modelBuilder.Entity<Message>().HasRequired(x => x.SenderUser).WithMany(x => x.SendMessages).HasForeignKey(x => x.IdSender);
-            modelBuilder.Entity<Message>().HasRequired(x => x.RecipientUser).WithMany(x => x.RecivedMessage).HasForeignKey(x => x.RecipientUser);
+            modelBuilder.Entity<Message>().HasRequired(x => x.SenderUser).WithMany(x => x.SendMessages).HasForeignKey(x => x.IdSender).WillCascadeOnDelete(false);
+            modelBuilder.Entity<Message>().HasRequired(x => x.RecipientUser).WithMany(x => x.RecivedMessages).HasForeignKey(x => x.IdRecipient).WillCascadeOnDelete(false);
             #endregion
             #region FriendshipRequest
             modelBuilder.Entity<FriendshipRequest>().HasKey(x => new { x.SenderUserId, x.RecipientUserId });
-            modelBuilder.Entity<FriendshipRequest>().HasRequired(x => x.RecipientUser).WithMany(x => x.ReciveFriendshipRequests).HasForeignKey(x => x.RecipientUserId);
-            modelBuilder.Entity<FriendshipRequest>().HasRequired(x => x.SenderUser).WithMany(x => x.SendFriendshipRequests).HasForeignKey(x => x.SenderUserId);
+            modelBuilder.Entity<FriendshipRequest>().HasRequired(x => x.RecipientUser).WithMany(x => x.ReciveFriendshipRequests)
+                .HasForeignKey(x => x.RecipientUserId).WillCascadeOnDelete(false);
+            modelBuilder.Entity<FriendshipRequest>().HasRequired(x => x.SenderUser).WithMany(x => x.SendFriendshipRequests)
+                .HasForeignKey(x => x.SenderUserId).WillCascadeOnDelete(false);
+            #endregion
+            #region UserProfileSettings
+            modelBuilder.Entity<UserProfile>().HasKey(x => x.UserId);
             #endregion
             base.OnModelCreating(modelBuilder);
         }

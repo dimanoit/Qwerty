@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Qwerty.DAL.Repositories
 {
-    public class UnitOfWork : IUnitOfWork
+    public class UnitOfWork : IUnitOfWork, IDisposable
     {
         private ApplicationContext _database;
 
@@ -23,6 +23,10 @@ namespace Qwerty.DAL.Repositories
         private MessageRepository _messageManager;
         private FriendshipRequestRepository _requestManager;
 
+        public UnitOfWork(string connectionString)
+        {
+            _database = new ApplicationContext(connectionString);
+        }
         public ApplicationUserManager UserManager
         {
             get
@@ -91,7 +95,10 @@ namespace Qwerty.DAL.Repositories
                 return _requestManager;
             }
         }
-
+        public async Task SaveAsync()
+        {
+            await _database.SaveChangesAsync();
+        }
 
         private bool disposed = false;
         protected virtual void Dispose(bool disposing)

@@ -76,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EF\ApplicationContext.cs" />
+    <Compile Include="EF\QwertyDbInitializer.cs" />
     <Compile Include="Entities\ApplicationRole.cs" />
     <Compile Include="Entities\ApplicationUser.cs" />
     <Compile Include="Entities\Friend.cs" />

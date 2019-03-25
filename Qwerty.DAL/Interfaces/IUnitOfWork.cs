@@ -10,9 +10,10 @@ namespace Qwerty.DAL.Interfaces
 {
     public interface IUnitOfWork : IDisposable
     {
-        ApplicationUserManager UserManager { get;}
+        Task SaveAsync();
+        ApplicationUserManager UserManager { get; }
         ApplicationRoleManager RoleManager { get; }
-        FriendRepository FriendManager { get;}
+        FriendRepository FriendManager { get; }
         UserRepository QUserManager { get; }
         UserProfileRepository ProfileManager { get; }
         MessageRepository MessageManager { get; }
