@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qwerty.DAL", "Qwerty.DAL\Qw
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{93824468-1037-4994-9326-83BC24B5F9D0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qwerty.BLL", "Qwerty.BLL\Qwerty.BLL.csproj", "{9BA77382-9511-4E16-8B3E-D5E9779DD79E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{93824468-1037-4994-9326-83BC24B5F9D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{93824468-1037-4994-9326-83BC24B5F9D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{93824468-1037-4994-9326-83BC24B5F9D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9BA77382-9511-4E16-8B3E-D5E9779DD79E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BA77382-9511-4E16-8B3E-D5E9779DD79E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BA77382-9511-4E16-8B3E-D5E9779DD79E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BA77382-9511-4E16-8B3E-D5E9779DD79E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

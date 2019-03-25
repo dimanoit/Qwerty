@@ -18,5 +18,6 @@ namespace Qwerty.DAL.Entities
         public string City { get; set; }
         public string Email { get; set; }
         public virtual Friend ProfileAsFriend { get; set; }
+        public virtual User User { get; set; }
     }
 }

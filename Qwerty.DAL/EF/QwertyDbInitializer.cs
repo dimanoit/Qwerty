@@ -12,7 +12,7 @@ using Microsoft.AspNet.Identity;
 
 namespace Qwerty.DAL.EF
 {
-    public class QwertyDbInitializer : DropCreateDatabaseAlways<ApplicationContext>
+    public class QwertyDbInitializer : DropCreateDatabaseIfModelChanges<ApplicationContext>
     {
         protected override void Seed(ApplicationContext context)
         {
@@ -50,6 +50,15 @@ namespace Qwerty.DAL.EF
                 SendMessages = null,
                 Friends = null
             };
+
+            UserProfile AdminProfile = new UserProfile()
+            {
+                User = Admin1,
+                Email = "Admin@gmail.com",
+                Name = "Admin",
+                Surname = "AdminSur"
+            };
+
             User Anna1 = new User()
             {
                 ApplicationUser = Anna,
@@ -62,7 +71,13 @@ namespace Qwerty.DAL.EF
                 Friends = null
             };
 
-            
+            UserProfile AnnaProfile = new UserProfile()
+            {
+                User = Anna1,
+                Email = "Anna@gmail.com",
+                Name = "Anna",
+                Surname = "AnnaSur"
+            };
 
             var result = Usermanager.Create(Admin, AdminPassword);
             var result2 = Usermanager.Create(Anna, AnnaPassword);
@@ -74,10 +89,31 @@ namespace Qwerty.DAL.EF
                 Usermanager.AddToRole(Anna.Id, UserRole.Name);
             }
             Anna1.UserId = Anna.Id;
+            AnnaProfile.UserId = Anna1.UserId;
+
             Admin1.UserId = Admin.Id;
+            AdminProfile.UserId = Admin1.UserId;
+
+            context.Profiles.Add(AnnaProfile);
+            context.Profiles.Add(AdminProfile);
 
             context.QUsers.Add(Admin1);
             context.QUsers.Add(Anna1);
+
+            Message message = new Message()
+            {
+                DateAndTimeMessage = DateTime.Now,
+
+                IdRecipient = Admin1.UserId,
+                RecipientUser = Admin1,
+
+                IdSender = Anna1.UserId,
+                SenderUser = Anna1,
+
+                TextMessage = "First Text Message"
+            };
+
+            context.Messages.Add(message);
             context.SaveChanges();
 
             base.Seed(context);

@@ -25,13 +25,13 @@ namespace Qwerty.DAL.Repositories
 
         public void Delete(string IdRecipient, string IdSender)
         {
-            FriendshipRequest request = _database.Requests.Find(IdRecipient, IdSender);
+            FriendshipRequest request = _database.Requests.Find(IdSender, IdRecipient);
             if (request != null) _database.Requests.Remove(request);
         }
 
         public FriendshipRequest Get(string IdRecipient, string IdSender)
         {
-            return _database.Requests.Find(IdRecipient, IdSender); 
+            return _database.Requests.Find(IdSender, IdRecipient); 
         }
 
         public IEnumerable<FriendshipRequest> GetAll()

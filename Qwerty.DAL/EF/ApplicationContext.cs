@@ -37,7 +37,7 @@ namespace Qwerty.DAL.EF
             #endregion
             #region FriendSettings
             modelBuilder.Entity<Friend>().HasKey(x => x.FriendId);
-            modelBuilder.Entity<Friend>().HasRequired(x => x.UserProfile).WithRequiredPrincipal(x => x.ProfileAsFriend);
+            modelBuilder.Entity<Friend>().HasRequired(x => x.UserProfile).WithOptional(x => x.ProfileAsFriend);
             #endregion
             #region Messages
             modelBuilder.Entity<Message>().HasKey(x => x.IdMessage);
@@ -55,6 +55,7 @@ namespace Qwerty.DAL.EF
             #endregion
             #region UserProfileSettings
             modelBuilder.Entity<UserProfile>().HasKey(x => x.UserId);
+            modelBuilder.Entity<UserProfile>().HasRequired(x => x.User).WithRequiredPrincipal(x => x.UserProfile);
             #endregion
             base.OnModelCreating(modelBuilder);
         }
