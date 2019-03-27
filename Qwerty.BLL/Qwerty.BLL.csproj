@@ -76,9 +76,19 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DTO\UserDTO.cs" />
+    <Compile Include="Infrastructure\OperationDetails.cs" />
+    <Compile Include="Interfaces\IServiceCreator.cs" />
+    <Compile Include="Interfaces\IUserService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\ServiceCreator.cs" />
+    <Compile Include="Services\UserService.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\Qwerty.DAL\Qwerty.DAL.csproj">
+      <Project>{d89b7a31-25c6-4323-8eec-27bd6608549b}</Project>
+      <Name>Qwerty.DAL</Name>
+    </ProjectReference>
+  </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
