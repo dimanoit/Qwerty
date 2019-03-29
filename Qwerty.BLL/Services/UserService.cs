@@ -41,16 +41,14 @@ namespace Qwerty.BLL.Services
             }
             else
             {
-                return new OperationDetails(false, "User with this login already exists", "Email");
+                return new OperationDetails(false, "User with this login already exists", "UserName");
             }
         }
 
         public async Task<ClaimsIdentity> Authenticate(UserDTO userDto)
         {
             ClaimsIdentity claim = null;
-            // находим пользователя
             ApplicationUser user = await Database.UserManager.FindAsync(userDto.Email, userDto.Password);
-            // авторизуем его и возвращаем объект ClaimsIdentity
             if (user != null)
                 claim = await Database.UserManager.CreateIdentityAsync(user,
                                             DefaultAuthenticationTypes.ApplicationCookie);
@@ -69,6 +67,30 @@ namespace Qwerty.BLL.Services
                 }
             }
             await Create(adminDto);
+        }
+
+        public async Task<UserDTO> FindUser(string UserName, string Password)
+        {
+            ApplicationUser user = await Database.UserManager.FindByNameAsync(UserName);
+            if (user?.User.Password == Password)
+            {
+                UserProfile profile = user.User.UserProfile;
+                return new UserDTO()
+                {
+                    Name = profile.Name,
+                    Password = Password,
+                    AboutUrl = profile.AboutUrl,
+                    City = profile.City,
+                    Country = profile.Country,
+                    Email = profile.Email,
+                    Id = user.Id,
+                    ImageUrl = profile.ImageUrl,
+                    Phone = profile.Phone,
+                    Surname = profile.Surname,
+                    UserName = UserName
+                };
+            }
+            else return null;
         }
 
         public void Dispose()
