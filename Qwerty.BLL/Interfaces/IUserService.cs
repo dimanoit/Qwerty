@@ -15,5 +15,8 @@ namespace Qwerty.BLL.Interfaces
         Task<ClaimsIdentity> Authenticate(UserDTO userDto);
         Task SetInitialData(UserDTO adminDto, List<string> roles);
         Task<UserDTO> FindUser(string UserName, string Password);
+        Task<OperationDetails> ChangeProfileInformation(UserDTO userDTO);
+        Task<OperationDetails> DeleteUser(string UserId);
+        Task<IEnumerable<UserDTO>> GetUsersByFullName(string Name, string Surname);
     }
 }

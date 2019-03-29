@@ -27,7 +27,7 @@ namespace Qwerty.BLL.Services
             ApplicationUser user = await Database.UserManager.FindByNameAsync(userDto.UserName);
             if (user == null)
             {
-                user = new ApplicationUser { UserName = userDto.UserName};
+                user = new ApplicationUser { UserName = userDto.UserName };
                 var result = await Database.UserManager.CreateAsync(user, userDto.Password);
                 if (result.Errors.Count() > 0)
                     return new OperationDetails(false, result.Errors.FirstOrDefault(), "");
@@ -37,7 +37,7 @@ namespace Qwerty.BLL.Services
                 Database.QUserManager.Create(Quser);
                 Database.ProfileManager.Create(profile);
                 await Database.SaveAsync();
-                return new OperationDetails(true, "Registration successful", "UserName");
+                return new OperationDetails(true, "Registration successful", "user");
             }
             else
             {
@@ -48,7 +48,7 @@ namespace Qwerty.BLL.Services
         public async Task<ClaimsIdentity> Authenticate(UserDTO userDto)
         {
             ClaimsIdentity claim = null;
-            ApplicationUser user = await Database.UserManager.FindAsync(userDto.Email, userDto.Password);
+            ApplicationUser user = await Database.UserManager.FindAsync(userDto.UserName, userDto.Password);
             if (user != null)
                 claim = await Database.UserManager.CreateIdentityAsync(user,
                                             DefaultAuthenticationTypes.ApplicationCookie);
@@ -93,6 +93,67 @@ namespace Qwerty.BLL.Services
             else return null;
         }
 
+        public async Task<OperationDetails> ChangeProfileInformation(UserDTO userDTO)
+        {
+            ApplicationUser user = await Database.UserManager.FindByNameAsync(userDTO.UserName);
+            if (user != null)
+            {
+                UserProfile profile = user.User.UserProfile;
+                profile.ImageUrl = userDTO.ImageUrl;
+                profile.Name = userDTO.Name;
+                profile.Surname = userDTO.Surname;
+                profile.Phone = userDTO.Phone;
+                profile.AboutUrl = userDTO.AboutUrl;
+                profile.City = userDTO.City;
+                profile.Country = userDTO.Country;
+                profile.Email = userDTO.Email;
+                Database.ProfileManager.Update(profile);
+                await Database.SaveAsync();
+                return new OperationDetails(true, "User successfully changed", "UserProfile");
+            }
+            else return new OperationDetails(false, "User is not found", "user");
+        }
+
+        public async Task<OperationDetails> DeleteUser(string UserId)
+        {
+            ApplicationUser user = await Database.UserManager.FindByIdAsync(UserId);
+            if (user != null)
+            {
+                Database.UserManager.Delete(user);
+                await Database.SaveAsync();
+                return new OperationDetails(true, "User successfully deleted", "user");
+            }
+            else return new OperationDetails(false, "User is not found", "user");
+        }
+
+        public async Task<IEnumerable<UserDTO>> GetUsersByFullName(string Name, string Surname)
+        {
+            List<UserDTO> FindedUsers = null;
+            await Task.Run(() =>
+           {
+               var profiles = Database.ProfileManager.GetAll().Where(x => x.Name == Name && x.Surname == Surname);
+               if (profiles != null)
+               {
+                   FindedUsers = new List<UserDTO>();
+                   foreach (var profile in profiles)
+                   {
+                       FindedUsers.Add(new UserDTO()
+                       {
+                           Name = profile.Name,
+                           AboutUrl = profile.AboutUrl,
+                           City = profile.City,
+                           Country = profile.Country,
+                           Email = profile.Email,
+                           Id = profile.UserId,
+                           ImageUrl = profile.ImageUrl,
+                           Phone = profile.Phone,
+                           Surname = profile.Surname,
+                       });
+                   }
+               }
+           });
+            return FindedUsers;
+        }
         public void Dispose()
         {
             Database.Dispose();

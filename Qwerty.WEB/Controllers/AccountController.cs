@@ -39,6 +39,35 @@ namespace UIWebApi.Controllers
                 return GetErrorResult(operationDetails);
             return Ok();
         }
+
+        [Route("{Name}/{Surname}")]
+        [HttpGet]
+        public async Task<IHttpActionResult> FindFriendsByFullName([FromUri]string Name, [FromUri]string Surname)
+        {
+            IEnumerable<UserDTO> users = await UserService.GetUsersByFullName(Name, Surname);
+            if (users == null) return NotFound();
+            else return Ok(users);
+        }
+        //[Route("DeleteUser")]
+        [HttpDelete]
+        [AllowAnonymous]
+        [Route("{UserId}")]
+        public async Task<IHttpActionResult> DeleteUser([FromUri] string UserId)
+        {
+            OperationDetails operationDetails =  await UserService.DeleteUser(UserId);
+            if (operationDetails.Succedeed) return Ok();
+            else return BadRequest(operationDetails.Message);
+        }
+
+        [AllowAnonymous]
+        [HttpPut]
+        public async Task<IHttpActionResult> ChangeUser([FromBody] UserDTO user)
+        {
+            OperationDetails operationDetails = await UserService.ChangeProfileInformation(user);
+            if (operationDetails.Succedeed) return Ok();
+            else return BadRequest(operationDetails.Message);
+        }
+
         private IHttpActionResult GetErrorResult(OperationDetails result)
         {
             if (result == null)
