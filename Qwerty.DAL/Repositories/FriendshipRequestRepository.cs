@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Qwerty.DAL.Repositories
 {
-    public class FriendshipRequestRepository : IFriendshipRequestRepository
+    public class FriendshipRequestRepository : IRepositoryWithTwoKeys<FriendshipRequest>
     {
         private ApplicationContext _database;
         public FriendshipRequestRepository(ApplicationContext applicationContext)

@@ -14,18 +14,22 @@ namespace Test
         static void Main(string[] args)
         {
             #region com
-            //string connection = ConfigurationManager.ConnectionStrings["Model1"].ConnectionString;
-            //UnitOfWork unitOfWork = new UnitOfWork(connection);
-            //Friend user2 = unitOfWork.FriendManager.GetAll().Last();
-            //foreach (var Users in user2.Users)
-            //{
-            //    Console.WriteLine(Users.UserProfile.Name);
-            //}
-            //unitOfWork.FriendManager.Delete(user2.FriendId);
-            //Console.ReadLine();
-            #endregion
-            TestDB();
+            string connection = ConfigurationManager.ConnectionStrings["Model1"].ConnectionString;
+            UnitOfWork unitOfWork = new UnitOfWork(connection);
+            Friend user2 = unitOfWork.FriendManager.GetAll().Last();
+            unitOfWork.FriendManager.Delete(user2.FriendId);
             Console.ReadLine();
+            #endregion
+            //  TestDB();
+
+            Console.ReadLine();
+        }
+        public static async Task<int> Get()
+        {
+            await Task<int>.Run(() => {
+                return 5;
+            });
+            return 4;
         }
         public static void TestDB()
         {
@@ -70,7 +74,7 @@ namespace Test
                                 FriendId = request.SenderUserId,
                                 UserProfile = request.SenderUser.UserProfile
                             };
-                            friend.Users.Add(user2);
+                            //friend.Users.Add(user2);
                             unitOfWork.FriendManager.Create(friend);
                         }
                         if (request.Status == FriendshipRequestStatus.Accepted || request.Status == FriendshipRequestStatus.Rejected)

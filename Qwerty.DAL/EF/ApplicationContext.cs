@@ -20,7 +20,7 @@ namespace Qwerty.DAL.EF
         public DbSet<FriendshipRequest> Requests { get; set; }
         public DbSet<UserProfile> Profiles { get; set; }
         public DbSet<Friend> Friends { get; set; }
-
+        public DbSet<UserFriends> UserFriends { get; set; }
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             #region UserSettings
@@ -28,12 +28,12 @@ namespace Qwerty.DAL.EF
             modelBuilder.Entity<User>().Property(x => x.UserId)
                 .HasDatabaseGeneratedOption(System.ComponentModel.DataAnnotations.Schema.DatabaseGeneratedOption.None);
             modelBuilder.Entity<ApplicationUser>().HasRequired(x => x.User).WithRequiredPrincipal(x => x.ApplicationUser);
-            modelBuilder.Entity<User>().HasMany(x => x.Friends).WithMany(x => x.Users).Map(m =>
-            {
-                m.MapLeftKey("UserId");
-                m.MapRightKey("FriendId");
-                m.ToTable("UsersFriends");
-            });
+            //modelBuilder.Entity<User>().HasMany(x => x.Friends).WithMany(x => x.Users).Map(m =>
+            //{
+            //    m.MapLeftKey("UserId");
+            //    m.MapRightKey("FriendId");  
+            //    m.ToTable("UsersFriends");
+            //});
             #endregion
             #region FriendSettings
             modelBuilder.Entity<Friend>().HasKey(x => x.FriendId);
@@ -56,6 +56,11 @@ namespace Qwerty.DAL.EF
             #region UserProfileSettings
             modelBuilder.Entity<UserProfile>().HasKey(x => x.UserId);
             modelBuilder.Entity<UserProfile>().HasRequired(x => x.User).WithRequiredPrincipal(x => x.UserProfile);
+            #endregion
+            #region UserFriendsSettings
+            modelBuilder.Entity<UserFriends>().HasKey(x => new { x.FriendId, x.UserId });
+            modelBuilder.Entity<UserFriends>().HasRequired(x => x.User).WithMany(x => x.UserFriends);
+            modelBuilder.Entity<UserFriends>().HasRequired(x => x.Friend).WithMany(x => x.UserFriends);
             #endregion
             base.OnModelCreating(modelBuilder);
         }

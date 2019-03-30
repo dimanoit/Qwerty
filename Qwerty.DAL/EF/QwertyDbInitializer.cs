@@ -48,7 +48,6 @@ namespace Qwerty.DAL.EF
                 ReciveFriendshipRequests = null,
                 SendFriendshipRequests = null,
                 SendMessages = null,
-                Friends = null
             };
 
             UserProfile AdminProfile = new UserProfile()
@@ -68,7 +67,6 @@ namespace Qwerty.DAL.EF
                 ReciveFriendshipRequests = null,
                 SendFriendshipRequests = null,
                 SendMessages = null,
-                Friends = null
             };
 
             UserProfile AnnaProfile = new UserProfile()

@@ -84,10 +84,11 @@
     <Compile Include="Entities\FriendshipRequestStatus.cs" />
     <Compile Include="Entities\Message.cs" />
     <Compile Include="Entities\User.cs" />
+    <Compile Include="Entities\UserFriends.cs" />
     <Compile Include="Entities\UserProfile.cs" />
     <Compile Include="Identity\ApplicationRoleManager.cs" />
     <Compile Include="Identity\ApplicationUserManager.cs" />
-    <Compile Include="Interfaces\IFriendshipRequestRepository.cs" />
+    <Compile Include="Interfaces\IRepositoryWithTwoKeys.cs" />
     <Compile Include="Interfaces\IUnitOfWork.cs" />
     <Compile Include="Interfaces\IRepository.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -95,6 +96,7 @@
     <Compile Include="Repositories\FriendshipRequestRepository.cs" />
     <Compile Include="Repositories\MessageRepository.cs" />
     <Compile Include="Repositories\UnitOfWork.cs" />
+    <Compile Include="Repositories\UserFriendsRepository.cs" />
     <Compile Include="Repositories\UserProfileRepository.cs" />
     <Compile Include="Repositories\UserRepository.cs" />
   </ItemGroup>

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Qwerty.DAL.Repositories
 {
-    public class MessageRepository : IRepository<Message, string>
+    public class MessageRepository : IRepository<Message, int>
     {
         private ApplicationContext _database;
         public MessageRepository(ApplicationContext applicationContext)
@@ -23,13 +23,13 @@ namespace Qwerty.DAL.Repositories
             _database.Messages.Add(item);
         }
 
-        public void Delete(string id)
+        public void Delete(int id)
         {
             Message boof = _database.Messages.Find(id);
             if (boof != null) _database.Messages.Remove(boof);
         }
 
-        public Message Get(string id)
+        public Message Get(int id)
         {
             return _database.Messages.Find(id);
         }

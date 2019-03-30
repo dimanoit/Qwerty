@@ -15,7 +15,8 @@ namespace Qwerty.DAL.Entities
         public string Login { get; set; }
         public virtual UserProfile UserProfile { get; set; }
         public virtual ApplicationUser ApplicationUser { get; set; }
-        public virtual ICollection<Friend> Friends { get; set; }
+        
+        public virtual ICollection<UserFriends> UserFriends { get; set; }
         public virtual ICollection<Message> SendMessages { get; set; }
         public virtual ICollection<Message> RecivedMessages { get; set; }
         public virtual ICollection<FriendshipRequest> ReciveFriendshipRequests { get; set; }
@@ -23,7 +24,7 @@ namespace Qwerty.DAL.Entities
         
         public User()
         {
-            Friends = new List<Friend>();
+            UserFriends = new List<UserFriends>();
             SendMessages = new List<Message>();
             RecivedMessages = new List<Message>();
             ReciveFriendshipRequests = new List<FriendshipRequest>();

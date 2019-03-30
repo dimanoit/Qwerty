@@ -18,5 +18,6 @@ namespace Qwerty.DAL.Interfaces
         UserProfileRepository ProfileManager { get; }
         MessageRepository MessageManager { get; }
         FriendshipRequestRepository RequestManager { get; }
+        UserFriendsRepository UserFriendsManager { get; }
     }
 }

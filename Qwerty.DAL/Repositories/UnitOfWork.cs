@@ -22,10 +22,21 @@ namespace Qwerty.DAL.Repositories
         private UserProfileRepository _profileManager;
         private MessageRepository _messageManager;
         private FriendshipRequestRepository _requestManager;
+        private UserFriendsRepository _userFriendsManager;
+
 
         public UnitOfWork(string connectionString)
         {
             _database = new ApplicationContext(connectionString);
+        }
+        public UserFriendsRepository UserFriendsManager
+        {
+            get
+            {
+                if (_userFriendsManager == null)
+                    _userFriendsManager = new UserFriendsRepository(_database);
+                return _userFriendsManager;
+            }
         }
         public ApplicationUserManager UserManager
         {

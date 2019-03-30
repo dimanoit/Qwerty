@@ -4,6 +4,10 @@ using System.Linq;
 using System.Web;
 using System.Web.Http;
 using System.Web.Routing;
+using Ninject;
+using Ninject.Modules;
+using Ninject.Web.WebApi;
+using Qwerty.Settings;
 
 namespace Qwerty.WEB
 {
@@ -11,7 +15,13 @@ namespace Qwerty.WEB
     {
         protected void Application_Start()
         {
+            AutoMapper.Mapper.Initialize(cfg => cfg.AddProfile<MapperSetting>());
             GlobalConfiguration.Configure(WebApiConfig.Register);
+
+            NinjectModule ServiceBinding = new NingjectSetting();
+            var kernel = new StandardKernel(ServiceBinding);
+            var ningectResolver = new NinjectDependencyResolver(kernel);
+            GlobalConfiguration.Configuration.DependencyResolver = ningectResolver;
         }
     }
 }

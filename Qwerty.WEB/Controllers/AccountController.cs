@@ -5,10 +5,10 @@ using System.Web.Http;
 using System.Web;
 using System.Net.Http;
 using Microsoft.AspNet.Identity.Owin;
-using Qwerty.BLL.Infrastructure;
-using Qwerty.BLL.DTO;
-using Qwerty.BLL.Interfaces;
 using Qwerty.WEB.Models;
+using Qwerty.BLL.Interfaces;
+using Qwerty.BLL.DTO;
+using Qwerty.BLL.Infrastructure;
 
 namespace UIWebApi.Controllers
 {
