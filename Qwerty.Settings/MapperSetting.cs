@@ -15,6 +15,7 @@ namespace Qwerty.Settings
         {
             CreateMap<MessageDTO, Message>().ReverseMap();
             CreateMap<FriendshipRequestDTO, FriendshipRequest>().ReverseMap();
+            CreateMap<FriendDTO, Friend>().ReverseMap();
         } 
-    }
+    }   
 }

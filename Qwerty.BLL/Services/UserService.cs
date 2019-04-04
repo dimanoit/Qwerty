@@ -93,6 +93,26 @@ namespace Qwerty.BLL.Services
             else return null;
         }
 
+        public async Task<UserDTO> FindUserByUsername(string UserName)
+        {
+            ApplicationUser user = await Database.UserManager.FindByNameAsync(UserName);
+            UserProfile profile = user.User.UserProfile;
+            return new UserDTO()
+            {
+                Name = profile.Name,
+                AboutUrl = profile.AboutUrl,
+                City = profile.City,
+                Country = profile.Country,
+                Email = profile.Email,
+                Id = user.Id,
+                ImageUrl = profile.ImageUrl,
+                Phone = profile.Phone,
+                Surname = profile.Surname,
+                UserName = UserName,
+                Password = profile.User.Password
+            };
+        }
+
         public async Task<OperationDetails> ChangeProfileInformation(UserDTO userDTO)
         {
             ApplicationUser user = await Database.UserManager.FindByNameAsync(userDTO.UserName);

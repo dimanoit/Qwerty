@@ -9,6 +9,8 @@ using Qwerty.WEB.Models;
 using Qwerty.BLL.Interfaces;
 using Qwerty.BLL.DTO;
 using Qwerty.BLL.Infrastructure;
+using System.Security.Claims;
+using AutoMapper;
 
 namespace UIWebApi.Controllers
 {
@@ -27,6 +29,7 @@ namespace UIWebApi.Controllers
             {
                 return BadRequest(ModelState);
             }
+           // return Ok(new OperationDetails(true,"Test message","prop")); //TEST DELETE THIS!!!!!!!
 
             UserDTO userDto = new UserDTO
             {
@@ -37,7 +40,7 @@ namespace UIWebApi.Controllers
             OperationDetails operationDetails = await UserService.Create(userDto);
             if (!operationDetails.Succedeed)
                 return GetErrorResult(operationDetails);
-            return Ok();
+            return Ok(operationDetails);
         }
 
         [Route("{Name}/{Surname}")]
@@ -68,13 +71,27 @@ namespace UIWebApi.Controllers
             else return BadRequest(operationDetails.Message);
         }
 
+        [HttpGet]
+        [Route("GetUser")]
+        public async Task<IHttpActionResult> GetUser()
+        {
+            var IdentityClaims = (ClaimsIdentity)User.Identity;
+            var UserName = IdentityClaims.FindFirst("sub").Value;
+            if (UserName != null)
+            {
+                var user = await UserService.FindUserByUsername(UserName);
+                return Ok(/*Mapper.Map<UserDTO,UserProfileViewModel>(user)*/user);
+            }
+            else return BadRequest();
+        }
+
         private IHttpActionResult GetErrorResult(OperationDetails result)
         {
             if (result == null)
             {
                 return InternalServerError();
-            }
-
+            }   
+        
             if (!result.Succedeed)
             {
                 ModelState.AddModelError(result.Property, result.Message);
