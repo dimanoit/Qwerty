@@ -25,7 +25,6 @@ namespace Qwerty.BLL.Services
             await _database.SaveAsync();
             return new OperationDetails(true, "Succses deleted", "message");
         }
-
         public async Task<MessageDTO> GetMessage(int MessageId)
         {
             MessageDTO message = null;
@@ -49,5 +48,34 @@ namespace Qwerty.BLL.Services
             else return new OperationDetails(false, "This is message already exist", "message");
 
         }
+        public async Task<IEnumerable<MessageDTO>> GetLastMessages(string RecipientUserId)
+        {
+            List<MessageDTO> messages = null;
+            await Task.Run(() =>
+            {
+                User user = _database.QUserManager.Get(RecipientUserId);
+                var LastMessages = (from x in user.RecivedMessages
+                                    group x by x.IdSender into SenderAndYourMessages
+                                    select new
+                                    {
+                                        LastMessageSender = SenderAndYourMessages.OrderByDescending(x => x.DateAndTimeMessage).First(),
+                                        UserId = SenderAndYourMessages.Key
+                                    }).Select(x => x.LastMessageSender);
+                if (LastMessages != null)
+                {
+                    messages = new List<MessageDTO>();
+                    foreach (var message in LastMessages)
+                    {
+                        var MessageToSender = user.SendMessages.Where(x => x.IdRecipient == message.IdSender).OrderBy(x => x.DateAndTimeMessage).LastOrDefault();
+                        if (message.DateAndTimeMessage < MessageToSender?.DateAndTimeMessage)
+                            messages.Add(Mapper.Map<Message, MessageDTO>(MessageToSender));
+                        else
+                            messages.Add(Mapper.Map<Message, MessageDTO>(message));
+                    }
+                }
+            });
+            return messages;
+        }
+
     }
 }

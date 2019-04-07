@@ -29,12 +29,12 @@ namespace UIWebApi.Controllers
             {
                 return BadRequest(ModelState);
             }
-           // return Ok(new OperationDetails(true,"Test message","prop")); //TEST DELETE THIS!!!!!!!
-
             UserDTO userDto = new UserDTO
             {
                 Password = model.Password,
                 UserName = model.UserName,
+                Name = model.Name,
+                Surname = model.SurName,
                 Role = "user"
             };
             OperationDetails operationDetails = await UserService.Create(userDto);
@@ -51,27 +51,49 @@ namespace UIWebApi.Controllers
             if (users == null) return NotFound();
             else return Ok(users);
         }
-        //[Route("DeleteUser")]
+
+        [HttpPost]
+        [Route("UploadImage")]
+        public async Task<IHttpActionResult> UploadImage()
+        {
+            var IdentityClaims = (ClaimsIdentity)User.Identity;
+            var UserName = IdentityClaims.FindFirst("sub").Value;
+            var user = await UserService.FindUserByUsername(UserName);
+            if (user != null)
+            {
+                HttpRequest httpRequest = HttpContext.Current.Request;
+                HttpPostedFile postedFile = httpRequest.Files["Image"];
+                    if (postedFile.ContentType.Contains("jpg") || postedFile.ContentType.Contains("png") || postedFile.ContentType.Contains("jpeg"))
+                {
+                    var ImageUrl = "C:/Users/Dima/Documents/Programming/QwertyAngular/src/assets/ProfileImages/" + postedFile.FileName;
+                    postedFile.SaveAs(ImageUrl);
+                    OperationDetails operationDetails = await UserService.UploadImage(ImageUrl, user.UserName);
+                    return Ok(operationDetails);
+                }
+            }
+            return BadRequest();
+        }
+
         [HttpDelete]
         [AllowAnonymous]
         [Route("{UserId}")]
         public async Task<IHttpActionResult> DeleteUser([FromUri] string UserId)
         {
-            OperationDetails operationDetails =  await UserService.DeleteUser(UserId);
+            OperationDetails operationDetails = await UserService.DeleteUser(UserId);
             if (operationDetails.Succedeed) return Ok();
             else return BadRequest(operationDetails.Message);
         }
 
-        [AllowAnonymous]
+
         [HttpPut]
+        [Route("ChangeProfile")]
         public async Task<IHttpActionResult> ChangeUser([FromBody] UserDTO user)
         {
             OperationDetails operationDetails = await UserService.ChangeProfileInformation(user);
-            if (operationDetails.Succedeed) return Ok();
+            if (operationDetails.Succedeed) return Ok(operationDetails);
             else return BadRequest(operationDetails.Message);
         }
 
-        [HttpGet]
         [Route("GetUser")]
         public async Task<IHttpActionResult> GetUser()
         {
@@ -80,7 +102,8 @@ namespace UIWebApi.Controllers
             if (UserName != null)
             {
                 var user = await UserService.FindUserByUsername(UserName);
-                return Ok(/*Mapper.Map<UserDTO,UserProfileViewModel>(user)*/user);
+               // UserProfileViewModel profileViewModel = Mapper.Map<UserDTO, UserProfileViewModel>(user);
+                return Ok(user);
             }
             else return BadRequest();
         }
@@ -90,8 +113,8 @@ namespace UIWebApi.Controllers
             if (result == null)
             {
                 return InternalServerError();
-            }   
-        
+            }
+
             if (!result.Succedeed)
             {
                 ModelState.AddModelError(result.Property, result.Message);

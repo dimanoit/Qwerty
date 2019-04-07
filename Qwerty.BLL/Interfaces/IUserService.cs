@@ -19,5 +19,7 @@ namespace Qwerty.BLL.Interfaces
         Task<OperationDetails> DeleteUser(string UserId);
         Task<IEnumerable<UserDTO>> GetUsersByFullName(string Name, string Surname);
         Task<UserDTO> FindUserByUsername(string UserName);
+        Task<OperationDetails> UploadImage(string ImageUrl,string UserName);
+        Task<UserDTO> FindUserById(string UserId);
     }
 }

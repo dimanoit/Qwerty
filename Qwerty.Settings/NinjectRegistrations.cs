@@ -1,6 +1,8 @@
 ﻿using Ninject.Modules;
 using Qwerty.BLL.Interfaces;
 using Qwerty.BLL.Services;
+using Qwerty.DAL.Interfaces;
+using Qwerty.DAL.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +18,7 @@ namespace Qwerty.Settings
             Bind<IMessageService>().To<MessageService>().InSingletonScope();
             Bind<IFriendService>().To<FriendService>().InSingletonScope();
             Bind<IFriendshipRequestService>().To<FriendshipRequestService>().InSingletonScope();
+            Bind<IUnitOfWork>().To<UnitOfWork>().WithConstructorArgument("DefaultConnection");
         }
     }
 }
