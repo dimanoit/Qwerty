@@ -14,5 +14,6 @@ namespace Qwerty.BLL.Interfaces
         Task<MessageDTO> GetMessage(int  MessageID);
         Task<OperationDetails> DeleteMessage(int MessageID);
         Task<IEnumerable<MessageDTO>> GetLastMessages(string RecipientUserId);
+        Task<IEnumerable<MessageDTO>> GetAllMessagesFromDialog(string SenderId, string RecepientId);
     }
 }

@@ -84,6 +84,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Comparators\UserDTOComparer.cs" />
     <Compile Include="DTO\FriendDTO.cs" />
     <Compile Include="DTO\FriendshipRequestDTO.cs" />
     <Compile Include="DTO\MessageDTO.cs" />

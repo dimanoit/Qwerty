@@ -19,7 +19,7 @@ namespace Qwerty.WEB.Controllers
     [RoutePrefix("api/Messages")]
     public class MessageController : ApiController
     {
-       
+
         private async Task<UserDTO> GetCurrentUser()
         {
             var IdentityClaims = (ClaimsIdentity)User.Identity;
@@ -48,13 +48,15 @@ namespace Qwerty.WEB.Controllers
                     dialogs = new List<DialogViewModel>();
                     foreach (var el in Messages)
                     {
-                        user = await UserService.FindUserById(el.IdSender);
+                        UserDTO MessageUser = null;
+                        if (el.IdSender == user.Id) MessageUser = await UserService.FindUserById(el.IdRecipient);
+                        else MessageUser = await UserService.FindUserById(el.IdSender);
                         dialogs.Add(new DialogViewModel
                         {
-                            LastMessage = Mapper.Map<MessageDTO, MessageViewModel>(el),
-                            ImageUrl = user.ImageUrl,
-                            Name = user.Name,
-                            Surname = user.Surname
+                            Message = Mapper.Map<MessageDTO, MessageViewModel>(el),
+                            ImageUrl = MessageUser.ImageUrl,
+                            Name = MessageUser.Name,
+                            Surname = MessageUser.Surname
                         });
                     }
                     return Ok(dialogs);
@@ -79,5 +81,32 @@ namespace Qwerty.WEB.Controllers
             }
             else return BadRequest();
         }
+
+        [Route("DialogMessages/{SenderId}")]
+        [HttpGet]
+        public async Task<IHttpActionResult> GetAllMessageFromSender([FromUri] string SenderId)
+        {
+            UserDTO CurrentUser = await GetCurrentUser();
+            if (CurrentUser != null)
+            {
+                UserDTO Sender = await UserService.FindUserById(SenderId);
+                if (Sender != null)
+                {
+                    List<MessageViewModel> AllMessages = null;
+                    var MessagesDTO = await _messageService.GetAllMessagesFromDialog(Sender.Id, CurrentUser.Id);
+                    if(MessagesDTO != null)
+                    {
+                        AllMessages = new List<MessageViewModel>();
+                        foreach (var message in MessagesDTO)
+                        {
+                            AllMessages.Add(Mapper.Map<MessageDTO, MessageViewModel>(message));
+                        }
+                        return Ok(AllMessages); 
+                    }
+                }
+            }
+            return BadRequest();
+        }
+
     }
 }

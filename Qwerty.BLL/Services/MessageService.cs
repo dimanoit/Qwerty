@@ -76,6 +76,23 @@ namespace Qwerty.BLL.Services
             });
             return messages;
         }
+        public async Task<IEnumerable<MessageDTO>> GetAllMessagesFromDialog(string SenderId, string RecepientId)
+        {
+            List<MessageDTO> Messages = new List<MessageDTO>();
+            await Task.Run(() =>
+            {
+                User Sender = _database.QUserManager.Get(SenderId);
+                foreach (var message in Sender.SendMessages.Where(x => x.IdRecipient == RecepientId))
+                {
+                    Messages.Add(Mapper.Map<Message, MessageDTO>(message));
+                }
+                foreach (var message in Sender.RecivedMessages.Where(x => x.IdSender == RecepientId))
+                {
+                    Messages.Add(Mapper.Map<Message, MessageDTO>(message));
+                }
+            });
+            return Messages.OrderBy(x => x.DateAndTimeMessage);
+        }
 
     }
 }

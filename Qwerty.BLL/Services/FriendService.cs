@@ -27,7 +27,7 @@ namespace Qwerty.BLL.Services
             {
                 ApplicationUser user = await _database.UserManager.FindByIdAsync(friendDto.FriendId);
                 if (user == null) return new OperationDetails(false, "There is no user with this Id", "friend");
-                _database.FriendManager.Create(friend);
+                _database.FriendManager.Create(Mapper.Map<FriendDTO, Friend>(friendDto));
                 await _database.SaveAsync();
                 return new OperationDetails(true, "Friend created successfully", "friend");
             }
@@ -44,24 +44,53 @@ namespace Qwerty.BLL.Services
             return new OperationDetails(true, "This Friendship was deleted", "UserFriends");
         }
 
-        public async Task<FriendDTO> FindFriend(string ThisUserId, string UserFriendId)
+        public async Task<OperationDetails> AcceptFriend(string SenderId, string RecipientId)
         {
-            Friend friend = _database.UserFriendsManager.Get(ThisUserId, UserFriendId).Friend;
-            return Mapper.Map<Friend, FriendDTO>(friend);
+            FriendDTO friend = await FindFriend(SenderId, RecipientId);
+            OperationDetails operationDetails = await Create(new FriendDTO { FriendId = RecipientId });
+            OperationDetails operationDetails1 = await Create(new FriendDTO { FriendId = SenderId });
+            _database.UserFriendsManager.Create(new UserFriends() { UserId = SenderId, FriendId = RecipientId });
+            _database.RequestManager.Delete(RecipientId, SenderId);
+            await _database.SaveAsync();
+            return new OperationDetails(true, "Friends adedd", "friend");
         }
 
-        public async Task<IEnumerable<FriendDTO>> GetFriends(string ThisUserId)
+        public async Task<FriendDTO> FindFriend(string ThisUserId, string UserFriendId)
         {
-            List<FriendDTO> friends = null;
+            Friend friend = _database.UserFriendsManager.Get(UserFriendId, ThisUserId)?.Friend;
+            return friend != null ? Mapper.Map<Friend, FriendDTO>(friend) : null;
+        }
+
+        public async Task<IEnumerable<UserDTO>> GetFriendsProfiles(string ThisUserId)
+        {
+            List<UserDTO> friendsProfilies = null;
             await Task.Run(() =>
             {
-                var friendsBoof = _database.UserFriendsManager.GetAll().Select(x => x.Friend).ToList();
-                foreach (var friend in friendsBoof)
+                var friendsBoof = _database.FriendManager.Get(ThisUserId).UserFriends.ToList();
+                if (friendsBoof != null)
                 {
-                    friends.Add(Mapper.Map<Friend, FriendDTO>(friend));
+                    friendsProfilies = new List<UserDTO>();
+                    //foreach (var friend in friendsBoof)
+                    //{
+                    //    //var friendProfile = friend.UserProfile;
+                    //    //friendsProfilies.Add(new UserDTO()
+                    //    //{
+                    //    //    Name = friendProfile.Name,
+                    //    //    AboutUrl = friendProfile.AboutUrl,
+                    //    //    City = friendProfile.City,
+                    //    //    Country = friendProfile.Country,
+                    //    //    Email = friendProfile.Email,
+                    //    //    Id = friend.UserId,
+                    //    //    ImageUrl = friendProfile.ImageUrl,
+                    //    //    Phone = friendProfile.Phone,
+                    //    //    Surname = friendProfile.Surname,
+                    //    //    UserName = friend.Login,
+                    //    //    Password = friendProfile.User.Password
+                    //    //});
+                    //}
                 }
             });
-            return friends;
+            return friendsProfilies;
         }
     }
 }

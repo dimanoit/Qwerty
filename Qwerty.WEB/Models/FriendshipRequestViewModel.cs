@@ -7,10 +7,11 @@ namespace Qwerty.WEB.Models
 {
     public enum FriendshipRequestStatus
     {
+        NotSent,
         Rejected,
         Accepted,
         Sent,
-        NotSent
+        
     }
     public class FriendshipRequestViewModel
     {

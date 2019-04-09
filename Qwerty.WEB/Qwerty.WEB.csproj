@@ -157,15 +157,19 @@
     <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\FriendsController.cs" />
+    <Compile Include="Controllers\FriendshipRequestController.cs" />
     <Compile Include="Controllers\MessageController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\DialogViewModel.cs" />
+    <Compile Include="Models\FindUserViewModel.cs" />
     <Compile Include="Models\FriendshipRequestViewModel.cs" />
     <Compile Include="Models\FriendViewModel.cs" />
     <Compile Include="Models\MessageViewModel.cs" />
     <Compile Include="Models\RegisterModel.cs" />
+    <Compile Include="Models\RequestProfile.cs" />
     <Compile Include="Models\UserProfileViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\ApplicationOAuthProvider.cs" />
@@ -185,7 +189,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Qwerty.BLL\Qwerty.BLL.csproj">
-      <Project>{9BA77382-9511-4E16-8B3E-D5E9779DD79E}</Project>
+      <Project>{9ba77382-9511-4e16-8b3e-d5e9779dd79e}</Project>
       <Name>Qwerty.BLL</Name>
     </ProjectReference>
     <ProjectReference Include="..\Qwerty.Settings\Qwerty.Settings.csproj">

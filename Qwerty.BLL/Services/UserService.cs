@@ -139,7 +139,6 @@ namespace Qwerty.BLL.Services
             if (user != null)
             {
                 UserProfile profile = user.User.UserProfile;
-                profile.ImageUrl = userDTO.ImageUrl;
                 profile.Name = userDTO.Name;
                 profile.Surname = userDTO.Surname;
                 profile.Phone = userDTO.Phone;
@@ -166,12 +165,16 @@ namespace Qwerty.BLL.Services
             else return new OperationDetails(false, "User is not found", "user");
         }
 
-        public async Task<IEnumerable<UserDTO>> GetUsersByFullName(string Name, string Surname)
+        public async Task<IEnumerable<UserDTO>> GetUsers(string Name = null, string Surname = null, string Country = null, string City = null)
         {
             List<UserDTO> FindedUsers = null;
             await Task.Run(() =>
            {
-               var profiles = Database.ProfileManager.GetAll().Where(x => x.Name == Name && x.Surname == Surname);
+               var profiles = Database.ProfileManager.GetAll();
+               if (Name != null) profiles = profiles.Where(x => x.Name.Contains(Name));
+               if (Surname != null) profiles = profiles.Where(x => x.Surname.Contains(Surname));
+               if (Country != null) profiles = profiles.Where(x => x.Country == Country);
+               if (City != null) profiles = profiles.Where(x => x.City == City);
                if (profiles != null)
                {
                    FindedUsers = new List<UserDTO>();
@@ -201,7 +204,7 @@ namespace Qwerty.BLL.Services
         public async Task<OperationDetails> UploadImage(string ImageUrl, string UserName)
         {
             ApplicationUser user = await Database.UserManager.FindByNameAsync(UserName);
-            if(user != null)
+            if (user != null)
             {
                 UserProfile profile = user.User.UserProfile;
                 profile.ImageUrl = ImageUrl;

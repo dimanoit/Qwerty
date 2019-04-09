@@ -39,15 +39,48 @@ namespace Qwerty.BLL.Services
 
         public async Task<OperationDetails> Send(FriendshipRequestDTO friendshipRequesDTO)
         {
-            FriendshipRequest request = _database.RequestManager.Get(friendshipRequesDTO.RecipientUserId,friendshipRequesDTO.SenderUserId);
+            FriendshipRequest request = _database.RequestManager.Get(friendshipRequesDTO.RecipientUserId, friendshipRequesDTO.SenderUserId);
             if (request == null)
             {
                 request = Mapper.Map<FriendshipRequestDTO, FriendshipRequest>(friendshipRequesDTO);
+                request.Status = FriendshipRequestStatus.Sent;
+                request.TimeSent = DateTime.Now;
                 _database.RequestManager.Create(request);
                 await _database.SaveAsync();
                 return new OperationDetails(true, "Request sended successfully", "message");
             }
             else return new OperationDetails(false, "This is request already exist", "message");
         }
+
+        public async Task<IEnumerable<FriendshipRequestDTO>> GetAllRequests(string SenderUserId)
+        {
+            ICollection<FriendshipRequestDTO> requestDTO = null;
+            await Task.Run(() =>
+            {
+                User user = _database.QUserManager.Get(SenderUserId);
+                if (user != null)
+                {
+                    var ReciveRequests = user.ReciveFriendshipRequests;
+                    var SendRequest = user.SendFriendshipRequests;
+                    if (ReciveRequests != null || SendRequest != null) requestDTO = new List<FriendshipRequestDTO>();
+                    if (ReciveRequests != null)
+                    {
+                        foreach (var el in ReciveRequests)
+                        {
+                            requestDTO.Add(Mapper.Map<FriendshipRequest, FriendshipRequestDTO>(el));
+                        }
+                    }
+                    if (SendRequest != null)
+                    {
+                        foreach (var el in SendRequest)
+                        {
+                            requestDTO.Add(Mapper.Map<FriendshipRequest, FriendshipRequestDTO>(el));
+                        }
+                    }
+                }
+            });
+            return requestDTO;
+        }
+
     }
 }

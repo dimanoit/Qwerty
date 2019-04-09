@@ -18,7 +18,9 @@ namespace Qwerty.WEB
 
             config.SuppressDefaultHostAuthentication();
             config.Filters.Add(new HostAuthenticationFilter(OAuthDefaults.AuthenticationType));
-
+            config.Routes.MapHttpRoute(
+                name: "IntermediateModelApi",
+                routeTemplate: "api/{controller}/{LeftId}/friends/{RightId}");
             config.Routes.MapHttpRoute(
                 name: "DefaultApi",
                 routeTemplate: "api/{controller}/{id}",
