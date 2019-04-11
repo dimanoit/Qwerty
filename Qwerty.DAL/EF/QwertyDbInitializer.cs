@@ -21,9 +21,13 @@ namespace Qwerty.DAL.EF
 
             ApplicationRole AdminRole = new ApplicationRole { Name = "admin" };
             ApplicationRole UserRole = new ApplicationRole { Name = "user" };
+            ApplicationRole BlockedUserRole = new ApplicationRole { Name = "blocked" };
+
 
             Rolemanager.Create(AdminRole);
             Rolemanager.Create(UserRole);
+            Rolemanager.Create(BlockedUserRole);
+
 
             ApplicationUser Admin = new ApplicationUser()
             {

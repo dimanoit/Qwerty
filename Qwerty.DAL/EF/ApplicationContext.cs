@@ -1,11 +1,6 @@
 ﻿using Microsoft.AspNet.Identity.EntityFramework;
 using Qwerty.DAL.Entities;
-using System;
-using System.Collections.Generic;
 using System.Data.Entity;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Qwerty.DAL.EF
 {
@@ -13,7 +8,7 @@ namespace Qwerty.DAL.EF
     {
         public ApplicationContext(string ConnectionString) : base(ConnectionString)
         {
-            Database.SetInitializer<ApplicationContext>(new QwertyDbInitializer());
+            Database.SetInitializer(new QwertyDbInitializer());
         }
         public DbSet<User> QUsers { get; set; }
         public DbSet<Message> Messages { get; set; }
@@ -28,12 +23,6 @@ namespace Qwerty.DAL.EF
             modelBuilder.Entity<User>().Property(x => x.UserId)
                 .HasDatabaseGeneratedOption(System.ComponentModel.DataAnnotations.Schema.DatabaseGeneratedOption.None);
             modelBuilder.Entity<ApplicationUser>().HasRequired(x => x.User).WithRequiredPrincipal(x => x.ApplicationUser);
-            //modelBuilder.Entity<User>().HasMany(x => x.Friends).WithMany(x => x.Users).Map(m =>
-            //{
-            //    m.MapLeftKey("UserId");
-            //    m.MapRightKey("FriendId");  
-            //    m.ToTable("UsersFriends");
-            //});
             #endregion
             #region FriendSettings
             modelBuilder.Entity<Friend>().HasKey(x => x.FriendId);

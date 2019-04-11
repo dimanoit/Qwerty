@@ -24,8 +24,12 @@ namespace Qwerty.WEB.Providers
             }
             var identity = new ClaimsIdentity(context.Options.AuthenticationType);
             identity.AddClaim(new Claim("sub", context.UserName));
-            identity.AddClaim(new Claim("role", "user"));
-            AuthenticationProperties properties = CreateProperties(user.Id);
+            var userRoles = userService.GetRolesByUserId(user.Id);
+            foreach (string roleName in userRoles)
+            {
+                identity.AddClaim(new Claim(ClaimTypes.Role, roleName));
+            }
+            AuthenticationProperties properties = CreateProperties(user.Id,userRoles);
             AuthenticationTicket ticket = new AuthenticationTicket(identity, properties);
             context.Validated(ticket);
         }
@@ -47,11 +51,12 @@ namespace Qwerty.WEB.Providers
 
             return Task.FromResult<object>(null);
         }
-        public static AuthenticationProperties CreateProperties(string id)
+        private  AuthenticationProperties CreateProperties(string id, IList<string> userRoles)
         {
             IDictionary<string, string> data = new Dictionary<string, string>
             {
-                { "Id", id }
+                { "Id", id },
+                { "roles", Newtonsoft.Json.JsonConvert.SerializeObject(userRoles) }
             };
             return new AuthenticationProperties(data);
         }

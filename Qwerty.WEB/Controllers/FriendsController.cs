@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Microsoft.AspNet.Identity.Owin;
-using Qwerty.BLL.Comparators;
 using Qwerty.BLL.DTO;
 using Qwerty.BLL.Infrastructure;
 using Qwerty.BLL.Interfaces;
@@ -16,7 +15,7 @@ using System.Web.Http;
 
 namespace Qwerty.WEB.Controllers
 {
-    [Authorize]
+    [Authorize(Roles ="user")]
     [RoutePrefix("api/Friends")]
     public class FriendsController : ApiController
     {

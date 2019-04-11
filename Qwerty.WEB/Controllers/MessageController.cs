@@ -15,7 +15,7 @@ using System.Web.Http;
 
 namespace Qwerty.WEB.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "user")]
     [RoutePrefix("api/Messages")]
     public class MessageController : ApiController
     {

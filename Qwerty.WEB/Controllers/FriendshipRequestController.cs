@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Microsoft.AspNet.Identity.Owin;
-using Qwerty.BLL.Comparators;
 using Qwerty.BLL.DTO;
 using Qwerty.BLL.Infrastructure;
 using Qwerty.BLL.Interfaces;
@@ -16,7 +15,7 @@ using System.Web.Http;
 
 namespace Qwerty.WEB.Controllers
 {
-    [Authorize]
+    [Authorize(Roles ="user")]
     [RoutePrefix("api/friendshipRequest")]
     public class FriendshipRequestController : ApiController
     {
@@ -44,7 +43,7 @@ namespace Qwerty.WEB.Controllers
             if (Sender != null)
             {
                 var CurrentUser = await GetCurrentUser();
-                if (new UserDTOComparer().Equals(Sender, CurrentUser))
+                if (CurrentUser.Id == Sender.Id)
                 {
                     UserDTO Recipient = await UserService.FindUserById(friendshipRequestViewModel.RecipientUserId);
                     if (Recipient != null)

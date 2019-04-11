@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Qwerty.BLL.Services
 {
-    public class UserService : IUserService
+    public class UserService : IUserService, IDisposable
     {
         public IUnitOfWork Database { get; set; }
 
@@ -31,7 +31,13 @@ namespace Qwerty.BLL.Services
                 var result = await Database.UserManager.CreateAsync(user, userDto.Password);
                 if (result.Errors.Count() > 0)
                     return new OperationDetails(false, result.Errors.FirstOrDefault(), "");
-                await Database.UserManager.AddToRoleAsync(user.Id, userDto.Role);
+                if(userDto.Roles.Count() > 0)
+                {
+                    foreach(var role in userDto.Roles)
+                    {
+                        Database.UserManager.AddToRole(user.Id, role);
+                    }
+                }
                 User Quser = new User() { ApplicationUser = user, Login = user.UserName, Password = userDto.Password, UserId = user.Id };
                 UserProfile profile = new UserProfile() { UserId = Quser.UserId, User = Quser, Name = userDto.Name, Surname = userDto.Surname };
                 Database.QUserManager.Create(Quser);
@@ -43,30 +49,6 @@ namespace Qwerty.BLL.Services
             {
                 return new OperationDetails(false, "User with this login already exists", "UserName");
             }
-        }
-
-        public async Task<ClaimsIdentity> Authenticate(UserDTO userDto)
-        {
-            ClaimsIdentity claim = null;
-            ApplicationUser user = await Database.UserManager.FindAsync(userDto.UserName, userDto.Password);
-            if (user != null)
-                claim = await Database.UserManager.CreateIdentityAsync(user,
-                                            DefaultAuthenticationTypes.ApplicationCookie);
-            return claim;
-        }
-
-        public async Task SetInitialData(UserDTO adminDto, List<string> roles)
-        {
-            foreach (string roleName in roles)
-            {
-                var role = await Database.RoleManager.FindByNameAsync(roleName);
-                if (role == null)
-                {
-                    role = new ApplicationRole { Name = roleName };
-                    await Database.RoleManager.CreateAsync(role);
-                }
-            }
-            await Create(adminDto);
         }
 
         public async Task<UserDTO> FindUser(string UserName, string Password)
@@ -191,16 +173,14 @@ namespace Qwerty.BLL.Services
                            ImageUrl = profile.ImageUrl,
                            Phone = profile.Phone,
                            Surname = profile.Surname,
+                           Roles = GetRolesByUserId(profile.UserId).ToArray()
                        });
                    }
                }
            });
             return FindedUsers;
         }
-        public void Dispose()
-        {
-            Database.Dispose();
-        }
+
         public async Task<OperationDetails> UploadImage(string ImageUrl, string UserName)
         {
             ApplicationUser user = await Database.UserManager.FindByNameAsync(UserName);
@@ -214,5 +194,17 @@ namespace Qwerty.BLL.Services
             }
             else return new OperationDetails(false, "User is not found", "user");
         }
+
+        public IList<string> GetRolesByUserId(string id)
+        {
+            var roles = Database.UserManager.GetRoles(id);
+            return roles;
+        }
+
+        public void Dispose()
+        {
+            Database.Dispose();
+        }
+
     }
 }

@@ -50,31 +50,44 @@ namespace Qwerty.BLL.Services
         }
         public async Task<IEnumerable<MessageDTO>> GetLastMessages(string RecipientUserId)
         {
-            List<MessageDTO> messages = null;
+            List<MessageDTO> resultMessages = null;
             await Task.Run(() =>
             {
                 User user = _database.QUserManager.Get(RecipientUserId);
-                var LastMessages = (from x in user.RecivedMessages
-                                    group x by x.IdSender into SenderAndYourMessages
-                                    select new
-                                    {
-                                        LastMessageSender = SenderAndYourMessages.OrderByDescending(x => x.DateAndTimeMessage).First(),
-                                        UserId = SenderAndYourMessages.Key
-                                    }).Select(x => x.LastMessageSender);
-                if (LastMessages != null)
+                var LastReceivedMessages = (from x in user.RecivedMessages
+                                            group x by x.IdSender into SenderAndYourMessages
+                                            select new
+                                            {
+                                                LastMessageSender = SenderAndYourMessages.OrderByDescending(x => x.DateAndTimeMessage).First(),
+                                                UserId = SenderAndYourMessages.Key
+                                            }).Select(x => x.LastMessageSender).ToList();
+                var LastSendedMessage = (from x in user.SendMessages 
+                                         group x by x.IdRecipient into RecipientAndYourMessages
+                                         select new
+                                         {
+                                             LastRecipientMessage = RecipientAndYourMessages.OrderByDescending(x => x.DateAndTimeMessage).First(),
+                                             UserId = RecipientAndYourMessages.Key
+                                         }).Select(x => x.LastRecipientMessage).ToList();
+                resultMessages = new List<MessageDTO>();
+                foreach (var SendSms in LastSendedMessage)
                 {
-                    messages = new List<MessageDTO>();
-                    foreach (var message in LastMessages)
+                    var LastRecived = LastReceivedMessages.Where(x => x.IdSender == SendSms.IdRecipient).FirstOrDefault();
+                    if (LastRecived != null)
                     {
-                        var MessageToSender = user.SendMessages.Where(x => x.IdRecipient == message.IdSender).OrderBy(x => x.DateAndTimeMessage).LastOrDefault();
-                        if (message.DateAndTimeMessage < MessageToSender?.DateAndTimeMessage)
-                            messages.Add(Mapper.Map<Message, MessageDTO>(MessageToSender));
-                        else
-                            messages.Add(Mapper.Map<Message, MessageDTO>(message));
+                        if (SendSms.DateAndTimeMessage > LastRecived.DateAndTimeMessage) resultMessages.Add(Mapper.Map<MessageDTO>(SendSms));
+                        else resultMessages.Add(Mapper.Map<MessageDTO>(LastRecived));
+                    }
+                    else resultMessages.Add(Mapper.Map<MessageDTO>(SendSms));
+                }
+                foreach (var ms in LastReceivedMessages)
+                {
+                    if ((resultMessages.Select(x => x.IdMessage).Contains(ms.IdMessage) || resultMessages.Select(x => x.IdRecipient).Contains(ms.IdSender)) == false)
+                    {
+                        resultMessages.Add(Mapper.Map<MessageDTO>(ms));
                     }
                 }
             });
-            return messages;
+            return resultMessages;
         }
         public async Task<IEnumerable<MessageDTO>> GetAllMessagesFromDialog(string SenderId, string RecepientId)
         {

@@ -66,31 +66,50 @@ namespace Qwerty.BLL.Services
             List<UserDTO> friendsProfilies = null;
             await Task.Run(() =>
             {
-                var friendsBoof = _database.FriendManager.Get(ThisUserId).UserFriends.ToList();
-                if (friendsBoof != null)
+                var friendsBoof1 = _database.FriendManager.Get(ThisUserId)?.UserFriends.ToList();
+                var friendsBoof2 = _database.QUserManager.Get(ThisUserId)?.UserFriends.ToList();
+                friendsProfilies = new List<UserDTO>();
+                if(friendsBoof1 != null)
+                foreach (var friend in friendsBoof1)
                 {
-                    friendsProfilies = new List<UserDTO>();
-                    //foreach (var friend in friendsBoof)
-                    //{
-                    //    //var friendProfile = friend.UserProfile;
-                    //    //friendsProfilies.Add(new UserDTO()
-                    //    //{
-                    //    //    Name = friendProfile.Name,
-                    //    //    AboutUrl = friendProfile.AboutUrl,
-                    //    //    City = friendProfile.City,
-                    //    //    Country = friendProfile.Country,
-                    //    //    Email = friendProfile.Email,
-                    //    //    Id = friend.UserId,
-                    //    //    ImageUrl = friendProfile.ImageUrl,
-                    //    //    Phone = friendProfile.Phone,
-                    //    //    Surname = friendProfile.Surname,
-                    //    //    UserName = friend.Login,
-                    //    //    Password = friendProfile.User.Password
-                    //    //});
-                    //}
+                    UserProfile friendProfile;
+                    friendProfile = friend.User.UserProfile;
+                    friendsProfilies.Add(new UserDTO()
+                    {
+                        Name = friendProfile.Name,
+                        AboutUrl = friendProfile.AboutUrl,
+                        City = friendProfile.City,
+                        Country = friendProfile.Country,
+                        Email = friendProfile.Email,
+                        Id = friend.UserId,
+                        ImageUrl = friendProfile.ImageUrl,
+                        Phone = friendProfile.Phone,
+                        Surname = friendProfile.Surname,
+                        Password = friendProfile.User.Password
+                    });
+                }
+                if(friendsBoof2 != null)
+                foreach (var friend in friendsBoof2)
+                {
+                    UserProfile friendProfile;
+                    friendProfile = friend.Friend.UserProfile;
+                    friendsProfilies.Add(new UserDTO()
+                    {
+                        Name = friendProfile.Name,
+                        AboutUrl = friendProfile.AboutUrl,
+                        City = friendProfile.City,
+                        Country = friendProfile.Country,
+                        Email = friendProfile.Email,
+                        Id = friend.UserId,
+                        ImageUrl = friendProfile.ImageUrl,
+                        Phone = friendProfile.Phone,
+                        Surname = friendProfile.Surname,
+                        Password = friendProfile.User.Password
+                    });
                 }
             });
             return friendsProfilies;
         }
+        
     }
 }

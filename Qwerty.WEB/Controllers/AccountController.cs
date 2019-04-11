@@ -9,14 +9,13 @@ using Qwerty.WEB.Models;
 using Qwerty.BLL.Interfaces;
 using Qwerty.BLL.DTO;
 using Qwerty.BLL.Infrastructure;
-using Qwerty.BLL.Comparators;
 using System.Security.Claims;
 using AutoMapper;
 using System.Linq;
 
 namespace UIWebApi.Controllers
 {
-    [Authorize]
+    [Authorize(Roles ="user")]
     [RoutePrefix("api/Account")]
     public class AccountController : ApiController
     {
@@ -50,7 +49,7 @@ namespace UIWebApi.Controllers
                 UserName = model.UserName,
                 Name = model.Name,
                 Surname = model.SurName,
-                Role = "user"
+                Roles = new string[] {"user"}
             };
             OperationDetails operationDetails = await UserService.Create(userDto);
             if (!operationDetails.Succedeed)
@@ -67,15 +66,7 @@ namespace UIWebApi.Controllers
             else
             {
                 var user = await GetCurrentUser();
-                if (user != null)
-                {
-                    IEnumerable<UserDTO> friends = await _friendService.GetFriendsProfiles(user.Id);
-                    if(friends != null)
-                    {
-                        users = users.Except(friends,new UserDTOComparer());
-                    }
-                }
-                return Ok(users);
+                return Ok(users.Where(x => x.Id != user.Id));
             }
         }
 

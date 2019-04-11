@@ -18,6 +18,7 @@ namespace Qwerty.Settings
             Bind<IMessageService>().To<MessageService>().InSingletonScope();
             Bind<IFriendService>().To<FriendService>().InSingletonScope();
             Bind<IFriendshipRequestService>().To<FriendshipRequestService>().InSingletonScope();
+            Bind<IAdminService>().To<AdminService>().InSingletonScope();
             Bind<IUnitOfWork>().To<UnitOfWork>().WithConstructorArgument("DefaultConnection");
         }
     }
