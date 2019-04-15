@@ -15,7 +15,7 @@ using System.Web.Http;
 
 namespace Qwerty.WEB.Controllers
 {
-    [Authorize(Roles ="user")]
+    [Authorize(Roles = "user")]
     [RoutePrefix("api/friendshipRequest")]
     public class FriendshipRequestController : ApiController
     {
@@ -23,11 +23,11 @@ namespace Qwerty.WEB.Controllers
         private IFriendService _friendService;
         private IFriendshipRequestService _friendshipRequestService;
 
-        private async Task<UserDTO> GetCurrentUser()
+        private UserDTO GetCurrentUser()
         {
             var IdentityClaims = (ClaimsIdentity)User.Identity;
             var UserName = IdentityClaims.FindFirst("sub").Value;
-            return await UserService.FindUserByUsername(UserName);
+            return UserService.FindUserByUsername(UserName);
         }
 
         public FriendshipRequestController(IFriendService friendService, IFriendshipRequestService friendshipRequestService)
@@ -39,55 +39,62 @@ namespace Qwerty.WEB.Controllers
         [HttpPost]
         public async Task<IHttpActionResult> SendFriendshipRequest([FromBody] FriendshipRequestViewModel friendshipRequestViewModel)
         {
-            UserDTO Sender = await UserService.FindUserById(friendshipRequestViewModel.SenderUserId);
-            if (Sender != null)
+            try
             {
-                var CurrentUser = await GetCurrentUser();
-                if (CurrentUser.Id == Sender.Id)
-                {
-                    UserDTO Recipient = await UserService.FindUserById(friendshipRequestViewModel.RecipientUserId);
-                    if (Recipient != null)
-                    {
-                        FriendDTO friend = await _friendService.FindFriend(friendshipRequestViewModel.SenderUserId, friendshipRequestViewModel.RecipientUserId);
-                        if (friend == null)
-                        {
-                            OperationDetails operationDetails = await _friendshipRequestService
-                                .Send(Mapper.Map<FriendshipRequestViewModel, FriendshipRequestDTO>(friendshipRequestViewModel));
-                            return Ok(operationDetails);
-                        }
-                    }
-                }
+                if (ModelState.IsValid == false) throw new ValidationException("Invalid request", "");
+                UserDTO user = GetCurrentUser();
+                if (user == null || user.Id != friendshipRequestViewModel.SenderUserId) throw new ValidationException("Invalid request", "");
+                UserDTO Recipient = await UserService.FindUserByIdAsync(friendshipRequestViewModel.RecipientUserId);
+                FriendDTO friend = _friendService.FindFriend(friendshipRequestViewModel.SenderUserId, friendshipRequestViewModel.RecipientUserId);
+                if (friend != null) throw new ValidationException("User is already your friend", "");
+                OperationDetails operationDetails = await _friendshipRequestService
+                    .Send(Mapper.Map<FriendshipRequestViewModel, FriendshipRequestDTO>(friendshipRequestViewModel));
+                return Ok(operationDetails);
             }
-            return BadRequest();
+            catch (ValidationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception)
+            {
+                return BadRequest("Server is not responding.");
+            }
         }
 
         [HttpGet]
         public async Task<IHttpActionResult> GetAllRequests([FromUri]string userId)
         {
-            UserDTO user = await GetCurrentUser();
-            if (user?.Id == userId)
+            try
             {
+                if (ModelState.IsValid == false) throw new ValidationException("Invalid request", "");
+                UserDTO user = GetCurrentUser();
+                if (user == null || user.Id != userId) throw new ValidationException("Invalid request", "");
                 var requests = await _friendshipRequestService.GetAllRequests(userId);
-                if (requests != null)
+                if (requests == null) throw new ValidationException("You have no friend requests.", "");
+                List<RequestProfile> requestProfiles = new List<RequestProfile>();
+                foreach (var el in requests)
                 {
-                    List<RequestProfile> requestProfiles = new List<RequestProfile>();
-                    foreach (var el in requests)
+                    UserDTO profile;
+                    if (el.SenderUserId == userId) profile = await UserService.FindUserByIdAsync(el.RecipientUserId);
+                    else profile = await UserService.FindUserByIdAsync(el.SenderUserId);
+                    requestProfiles.Add(new RequestProfile()
                     {
-                        UserDTO profile;
-                        if (el.SenderUserId == userId) profile = await UserService.FindUserById(el.RecipientUserId);
-                        else profile = await UserService.FindUserById(el.SenderUserId);
-                        requestProfiles.Add(new RequestProfile()
-                        {
-                            Request = Mapper.Map<FriendshipRequestDTO, FriendshipRequestViewModel>(el),
-                            Name = profile.Name,
-                            Surname = profile.Surname,
-                            ImageUrl = profile.ImageUrl
-                        });
-                    }
-                    return Ok(requestProfiles);
+                        Request = Mapper.Map<FriendshipRequestDTO, FriendshipRequestViewModel>(el),
+                        Name = profile.Name,
+                        Surname = profile.Surname,
+                        ImageUrl = profile.ImageUrl
+                    });
                 }
+                return Ok(requestProfiles);
             }
-            return BadRequest();
+            catch (ValidationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception)
+            {
+                return BadRequest("Server is not responding.");
+            }
         }
     }
 }

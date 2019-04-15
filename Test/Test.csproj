@@ -85,6 +85,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Qwerty.BLL\Qwerty.BLL.csproj">
+      <Project>{9ba77382-9511-4e16-8b3e-d5e9779dd79e}</Project>
+      <Name>Qwerty.BLL</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Qwerty.DAL\Qwerty.DAL.csproj">
       <Project>{d89b7a31-25c6-4323-8eec-27bd6608549b}</Project>
       <Name>Qwerty.DAL</Name>

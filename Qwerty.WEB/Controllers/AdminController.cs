@@ -21,11 +21,11 @@ namespace Qwerty.WEB.Controllers
     {
         private IAdminService _adminService;
         public IUserService UserService => Request.GetOwinContext().GetUserManager<IUserService>();
-        private async Task<UserDTO> GetCurrentUser()
+        private UserDTO GetCurrentUser()
         {
             var IdentityClaims = (ClaimsIdentity)User.Identity;
             var UserName = IdentityClaims.FindFirst("sub").Value;
-            return await UserService.FindUserByUsername(UserName);
+            return UserService.FindUserByUsername(UserName);
         }
 
         public AdminController(IAdminService adminService)
@@ -37,13 +37,19 @@ namespace Qwerty.WEB.Controllers
         [Route("block/{UserId}")]
         public async Task<IHttpActionResult> BlockUser([FromUri]string UserId)
         {
-
-            if (UserId != null && UserId != "")
+            try
             {
                 OperationDetails operationDetails = await _adminService.BlockUserAsync(UserId);
                 return Ok(operationDetails);
             }
-            else return BadRequest("Cant find user with this id " + UserId);
+            catch (ValidationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception)
+            {
+                return BadRequest("Server is not responding.");
+            }
         }
 
         [HttpPut]
@@ -51,26 +57,40 @@ namespace Qwerty.WEB.Controllers
         public async Task<IHttpActionResult> UnblockUser([FromUri]string UserId)
         {
 
-            if (UserId != null && UserId != "")
+            try
             {
                 OperationDetails operationDetails = await _adminService.UnblockUserAsync(UserId);
                 return Ok(operationDetails);
             }
-            else return BadRequest("Cant find user with this id " + UserId);
+            catch (ValidationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception)
+            {
+                return BadRequest("Server is not responding.");
+            }
         }
 
         [HttpGet]
         public async Task<IHttpActionResult> GetAllUserWithBlockedStatus()
         {
-
-            IEnumerable<UserDTO> users = await UserService.GetUsers();
-            if (users == null) return NotFound();
-            else
+            try
             {
-                var user = await GetCurrentUser();
+                var user = GetCurrentUser();
+                if (user == null) throw new ValidationException("Can`t find admin account", "");
+                IEnumerable<UserDTO> users = await UserService.GetUsers();
+                if (users == null) throw new ValidationException("No users", "");
                 return Ok(users.Where(x => x.Id != user.Id));
             }
+            catch (ValidationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception)
+            {
+                return BadRequest("Server is not responding.");
+            }
         }
-
     }
 }

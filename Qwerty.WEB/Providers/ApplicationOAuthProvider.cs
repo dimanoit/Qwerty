@@ -15,23 +15,32 @@ namespace Qwerty.WEB.Providers
     {
         public override async Task GrantResourceOwnerCredentials(OAuthGrantResourceOwnerCredentialsContext context)
         {
-            var userService = context.OwinContext.GetUserManager<IUserService>();
-            var user = await userService.FindUser(context.UserName, context.Password);
-            if (user == null)
+            try
             {
-                context.SetError("invalid_grant", "The user name or password is incorrect.");
+
+                var userService = context.OwinContext.GetUserManager<IUserService>();
+                var user = await userService.FindUserAsync(context.UserName, context.Password);
+                if (user == null)
+                {
+                    context.SetError("invalid_grant", "The user name or password is incorrect.");
+                    return;
+                }
+                var identity = new ClaimsIdentity(context.Options.AuthenticationType);
+                identity.AddClaim(new Claim("sub", context.UserName));
+                var userRoles = userService.GetRolesByUserId(user.Id);
+                foreach (string roleName in userRoles)
+                {
+                    identity.AddClaim(new Claim(ClaimTypes.Role, roleName));
+                }
+                AuthenticationProperties properties = CreateProperties(user.Id, userRoles);
+                AuthenticationTicket ticket = new AuthenticationTicket(identity, properties);
+                context.Validated(ticket);
+            }
+            catch (Exception)
+            {
+                context.SetError("Server", "Server is not responding.");
                 return;
             }
-            var identity = new ClaimsIdentity(context.Options.AuthenticationType);
-            identity.AddClaim(new Claim("sub", context.UserName));
-            var userRoles = userService.GetRolesByUserId(user.Id);
-            foreach (string roleName in userRoles)
-            {
-                identity.AddClaim(new Claim(ClaimTypes.Role, roleName));
-            }
-            AuthenticationProperties properties = CreateProperties(user.Id,userRoles);
-            AuthenticationTicket ticket = new AuthenticationTicket(identity, properties);
-            context.Validated(ticket);
         }
         public override Task TokenEndpoint(OAuthTokenEndpointContext context)
         {

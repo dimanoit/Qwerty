@@ -26,30 +26,25 @@ namespace Qwerty.BLL.Services
             return new OperationDetails(true, "Succses deleted", "request");
         }
 
-        public async Task<FriendshipRequestDTO> GetRequest(string SenderUserId, string RecipientUserId)
+        public FriendshipRequestDTO GetRequest(string SenderUserId, string RecipientUserId)
         {
             FriendshipRequestDTO requestDTO = null;
-            await Task.Run(() =>
-            {
-                FriendshipRequest request = _database.RequestManager.Get(RecipientUserId, SenderUserId);
-                requestDTO = Mapper.Map<FriendshipRequest, FriendshipRequestDTO>(request);
-            });
+            FriendshipRequest request = _database.RequestManager.Get(RecipientUserId, SenderUserId);
+            if(request != null)
+            requestDTO = Mapper.Map<FriendshipRequest, FriendshipRequestDTO>(request);
             return requestDTO;
         }
-
+        
         public async Task<OperationDetails> Send(FriendshipRequestDTO friendshipRequesDTO)
         {
             FriendshipRequest request = _database.RequestManager.Get(friendshipRequesDTO.RecipientUserId, friendshipRequesDTO.SenderUserId);
-            if (request == null)
-            {
-                request = Mapper.Map<FriendshipRequestDTO, FriendshipRequest>(friendshipRequesDTO);
-                request.Status = FriendshipRequestStatus.Sent;
-                request.TimeSent = DateTime.Now;
-                _database.RequestManager.Create(request);
-                await _database.SaveAsync();
-                return new OperationDetails(true, "Request sended successfully", "message");
-            }
-            else return new OperationDetails(false, "This is request already exist", "message");
+            if (request != null) throw new ValidationException("This is request already exist", "message");
+            request = Mapper.Map<FriendshipRequestDTO, FriendshipRequest>(friendshipRequesDTO);
+            request.Status = FriendshipRequestStatus.Sent;
+            request.TimeSent = DateTime.Now;
+            _database.RequestManager.Create(request);
+            await _database.SaveAsync();
+            return new OperationDetails(true, "Request sended successfully", "message");
         }
 
         public async Task<IEnumerable<FriendshipRequestDTO>> GetAllRequests(string SenderUserId)

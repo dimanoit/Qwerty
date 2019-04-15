@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Qwerty.DAL.Entities;
 using Qwerty.DAL.Identity;
 using Qwerty.DAL.Repositories;
 
@@ -13,11 +14,11 @@ namespace Qwerty.DAL.Interfaces
         Task SaveAsync();
         ApplicationUserManager UserManager { get; }
         ApplicationRoleManager RoleManager { get; }
-        FriendRepository FriendManager { get; }
-        UserRepository QUserManager { get; }
-        UserProfileRepository ProfileManager { get; }
-        MessageRepository MessageManager { get; }
-        FriendshipRequestRepository RequestManager { get; }
-        UserFriendsRepository UserFriendsManager { get; }
+        IRepository<Friend, string> FriendManager { get; }
+        IRepository<User, string>  QUserManager { get; }
+        IRepository<UserProfile, string> ProfileManager { get; }
+        IRepository<Message, int> MessageManager { get; }
+        IRepositoryWithTwoKeys<FriendshipRequest> RequestManager { get; }
+        IRepositoryWithTwoKeys<UserFriends> UserFriendsManager { get; }
     }
 }

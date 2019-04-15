@@ -15,49 +15,59 @@ using System.Web.Http;
 
 namespace Qwerty.WEB.Controllers
 {
-    [Authorize(Roles ="user")]
+    [Authorize(Roles = "user")]
     [RoutePrefix("api/Friends")]
     public class FriendsController : ApiController
     {
         public IUserService UserService => Request.GetOwinContext().GetUserManager<IUserService>();
         private IFriendService _friendService;
-        private IFriendshipRequestService _friendshipRequestService;
         private IMessageService _messageService;
 
 
-        private async Task<UserDTO> GetCurrentUser()
+        private UserDTO GetCurrentUser()
         {
             var IdentityClaims = (ClaimsIdentity)User.Identity;
             var UserName = IdentityClaims.FindFirst("sub").Value;
-            return await UserService.FindUserByUsername(UserName);
+            return UserService.FindUserByUsername(UserName);
         }
 
-        public FriendsController(IFriendService friendService,IMessageService messageService,
+        public FriendsController(IFriendService friendService, IMessageService messageService,
             IFriendshipRequestService friendshipRequestService)
         {
             _friendService = friendService;
-            _friendshipRequestService = friendshipRequestService;
             _messageService = messageService;
         }
 
         [HttpGet]
         public async Task<IHttpActionResult> GetAllFriendsAccounts([FromUri] string userId)
         {
-            UserDTO user = await GetCurrentUser();
-            if(user != null && user.Id == userId)
+            try
             {
+                UserDTO user = GetCurrentUser();
+                if (user == null || user.Id != userId) throw new ValidationException("Invalid request", "");
                 IEnumerable<UserDTO> friends = await _friendService.GetFriendsProfiles(user.Id);
                 return Ok(friends);
-            }return BadRequest();
+            }
+            catch (ValidationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception)
+            {
+                return BadRequest("Server is not responding.");
+            }
         }
 
         [HttpPost]
-        [Route("{SenderId}/friends/{RecepientId}")]
+        [Route("{SenderId}/friend/{RecepientId}")]
         public async Task<IHttpActionResult> AcceptFriend([FromUri] string SenderId, [FromUri] string RecepientId)
         {
-            OperationDetails operationDetails = await _friendService.AcceptFriend(SenderId, RecepientId);
-            if (operationDetails.Succedeed)
+            try
             {
+                UserDTO user = GetCurrentUser();
+                if (user == null || user.Id != RecepientId) throw new ValidationException("Invalid request", "");
+                OperationDetails operationDetails = await _friendService.AcceptFriend(SenderId, RecepientId);
+                if (!operationDetails.Succedeed) throw new ValidationException("Invalid request", "");
                 OperationDetails detailsMesage = await _messageService.Send(new MessageDTO()
                 {
                     DateAndTimeMessage = DateTime.Now,
@@ -65,11 +75,18 @@ namespace Qwerty.WEB.Controllers
                     IdRecipient = SenderId,
                     TextMessage = "Hi"
                 });
-
+                if (!detailsMesage.Succedeed) throw new ValidationException("Added in friend but" + detailsMesage.Message, "");
                 return Ok(detailsMesage);
             }
-            else return BadRequest();
+            catch (ValidationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception)
+            {
+                return BadRequest("Server is not responding.");
+            }
         }
-      
+
     }
 }

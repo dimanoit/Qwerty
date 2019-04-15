@@ -13,6 +13,7 @@ namespace Qwerty.WEB.Models
 
         [Required]
         [DataType(DataType.Password)]
+        [MinLength(3)]
         public string Password { get; set; }
 
 

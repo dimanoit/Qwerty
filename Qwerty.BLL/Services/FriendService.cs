@@ -21,24 +21,22 @@ namespace Qwerty.BLL.Services
         }
         public async Task<OperationDetails> Create(FriendDTO friendDto)
         {
+            if(friendDto == null ) throw new ValidationException("friendDto was null","");
             Friend friend = _database.FriendManager.Get(friendDto.FriendId);
-            if (friend != null) return new OperationDetails(false, "The person already has an account as a friend.", "friend");
-            else
-            {
-                ApplicationUser user = await _database.UserManager.FindByIdAsync(friendDto.FriendId);
-                if (user == null) return new OperationDetails(false, "There is no user with this Id", "friend");
-                _database.FriendManager.Create(Mapper.Map<FriendDTO, Friend>(friendDto));
-                await _database.SaveAsync();
-                return new OperationDetails(true, "Friend created successfully", "friend");
-            }
+            if (friend != null) throw new ValidationException("The person already has an account as a friend.", friendDto.FriendId);
+            User user =  _database.QUserManager.Get(friendDto.FriendId);
+            if (user == null) throw new ValidationException("The person already has an account as a friend.", friendDto.FriendId);
+            _database.FriendManager.Create(Mapper.Map<FriendDTO, Friend>(friendDto));
+            await _database.SaveAsync();
+            return new OperationDetails(true, "Friend created successfully", "friend");
         }
 
         public async Task<OperationDetails> DeleteFriend(string ThisUserId, string UserFriendId)
         {
             Friend friend = _database.FriendManager.Get(ThisUserId);
-            if (friend == null) return new OperationDetails(false, "The person already has an account as a friend.", "friend");
+            if (friend == null) throw new ValidationException("Friend with given id does not exist.", ThisUserId);
             UserFriends ThisFriendship = _database.UserFriendsManager.Get(ThisUserId, UserFriendId);
-            if (ThisFriendship == null) return new OperationDetails(false, "ThisFriendship not exist", "UserFriends");
+            if (ThisFriendship == null) throw new ValidationException("ThisFriendship not exist", "UserFriends");
             _database.UserFriendsManager.Delete(ThisUserId, UserFriendId);
             await _database.SaveAsync();
             return new OperationDetails(true, "This Friendship was deleted", "UserFriends");
@@ -46,16 +44,30 @@ namespace Qwerty.BLL.Services
 
         public async Task<OperationDetails> AcceptFriend(string SenderId, string RecipientId)
         {
-            FriendDTO friend = await FindFriend(SenderId, RecipientId);
-            OperationDetails operationDetails = await Create(new FriendDTO { FriendId = RecipientId });
-            OperationDetails operationDetails1 = await Create(new FriendDTO { FriendId = SenderId });
+            FriendDTO friend =  FindFriend(SenderId, RecipientId);
+            if (friend != null) throw new ValidationException("This user already your friend", RecipientId);
+            try
+            {
+                await Create(new FriendDTO { FriendId = RecipientId });
+                await Create(new FriendDTO { FriendId = SenderId });
+            }catch(ValidationException ex)
+            {
+                if (ex.Message == "The person already has an account as a friend.")
+                {
+                    _database.UserFriendsManager.Create(new UserFriends() { UserId = SenderId, FriendId = RecipientId });
+                    _database.RequestManager.Delete(RecipientId, SenderId);
+                    await _database.SaveAsync();
+                    return new OperationDetails(true, "Friends adedd", "friend");
+                }
+                else throw new ValidationException(ex.Message, ex.Property);
+            }
             _database.UserFriendsManager.Create(new UserFriends() { UserId = SenderId, FriendId = RecipientId });
             _database.RequestManager.Delete(RecipientId, SenderId);
             await _database.SaveAsync();
             return new OperationDetails(true, "Friends adedd", "friend");
         }
 
-        public async Task<FriendDTO> FindFriend(string ThisUserId, string UserFriendId)
+        public FriendDTO FindFriend(string ThisUserId, string UserFriendId)
         {
             Friend friend = _database.UserFriendsManager.Get(UserFriendId, ThisUserId)?.Friend;
             return friend != null ? Mapper.Map<Friend, FriendDTO>(friend) : null;
@@ -69,47 +81,47 @@ namespace Qwerty.BLL.Services
                 var friendsBoof1 = _database.FriendManager.Get(ThisUserId)?.UserFriends.ToList();
                 var friendsBoof2 = _database.QUserManager.Get(ThisUserId)?.UserFriends.ToList();
                 friendsProfilies = new List<UserDTO>();
-                if(friendsBoof1 != null)
-                foreach (var friend in friendsBoof1)
-                {
-                    UserProfile friendProfile;
-                    friendProfile = friend.User.UserProfile;
-                    friendsProfilies.Add(new UserDTO()
+                if (friendsBoof1 != null)
+                    foreach (var friend in friendsBoof1)
                     {
-                        Name = friendProfile.Name,
-                        AboutUrl = friendProfile.AboutUrl,
-                        City = friendProfile.City,
-                        Country = friendProfile.Country,
-                        Email = friendProfile.Email,
-                        Id = friend.UserId,
-                        ImageUrl = friendProfile.ImageUrl,
-                        Phone = friendProfile.Phone,
-                        Surname = friendProfile.Surname,
-                        Password = friendProfile.User.Password
-                    });
-                }
-                if(friendsBoof2 != null)
-                foreach (var friend in friendsBoof2)
-                {
-                    UserProfile friendProfile;
-                    friendProfile = friend.Friend.UserProfile;
-                    friendsProfilies.Add(new UserDTO()
+                        UserProfile friendProfile;
+                        friendProfile = friend.User.UserProfile;
+                        friendsProfilies.Add(new UserDTO()
+                        {
+                            Name = friendProfile.Name,
+                            AboutUrl = friendProfile.AboutUrl,
+                            City = friendProfile.City,
+                            Country = friendProfile.Country,
+                            Email = friendProfile.Email,
+                            Id = friend.UserId,
+                            ImageUrl = friendProfile.ImageUrl,
+                            Phone = friendProfile.Phone,
+                            Surname = friendProfile.Surname,
+                            Password = friendProfile.User.Password
+                        });
+                    }
+                if (friendsBoof2 != null)
+                    foreach (var friend in friendsBoof2)
                     {
-                        Name = friendProfile.Name,
-                        AboutUrl = friendProfile.AboutUrl,
-                        City = friendProfile.City,
-                        Country = friendProfile.Country,
-                        Email = friendProfile.Email,
-                        Id = friend.UserId,
-                        ImageUrl = friendProfile.ImageUrl,
-                        Phone = friendProfile.Phone,
-                        Surname = friendProfile.Surname,
-                        Password = friendProfile.User.Password
-                    });
-                }
+                        UserProfile friendProfile;
+                        friendProfile = friend.Friend.UserProfile;
+                        friendsProfilies.Add(new UserDTO()
+                        {
+                            Name = friendProfile.Name,
+                            AboutUrl = friendProfile.AboutUrl,
+                            City = friendProfile.City,
+                            Country = friendProfile.Country,
+                            Email = friendProfile.Email,
+                            Id = friend.UserId,
+                            ImageUrl = friendProfile.ImageUrl,
+                            Phone = friendProfile.Phone,
+                            Surname = friendProfile.Surname,
+                            Password = friendProfile.User.Password
+                        });
+                    }
             });
             return friendsProfilies;
         }
-        
+
     }
 }

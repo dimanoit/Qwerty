@@ -12,7 +12,7 @@ namespace Qwerty.BLL.Interfaces
     {
         Task<OperationDetails> Create(FriendDTO userDto);
         Task<OperationDetails> DeleteFriend(string ThisUserId, string UserFriendId);
-        Task<FriendDTO> FindFriend(string ThisUserId, string UserFriendId);
+        FriendDTO FindFriend(string ThisUserId, string UserFriendId);
         Task<IEnumerable<UserDTO>> GetFriendsProfiles(string ThisUserId);
         Task<OperationDetails> AcceptFriend(string SenderId, string RecipientId);
     }

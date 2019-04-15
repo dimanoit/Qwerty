@@ -22,27 +22,22 @@ namespace Qwerty.BLL.Services
 
         public async Task<OperationDetails> BlockUserAsync(string UserId)
         {
-            ApplicationUser user = await Database.UserManager.FindByIdAsync(UserId);
-            if (user != null)
-            {
-                await Database.UserManager.AddToRoleAsync(user.Id, "blocked");
-                await Database.UserManager.RemoveFromRoleAsync(user.Id, "user");
-                return (new OperationDetails(true, "User was blocked", "user"));
-            }
-            else return new OperationDetails(false, "User with this id not exists", "UserId");
-
+            if (UserId == null || UserId == "") throw new ValidationException("Incorrect user id", UserId);
+            User user = Database.QUserManager.Get(UserId);
+            if (user == null) throw new ValidationException("User with this id not exists", UserId);
+            await Database.UserManager.AddToRoleAsync(user.UserId, "blocked");
+            await Database.UserManager.RemoveFromRoleAsync(user.UserId, "user");
+            return (new OperationDetails(true, "User was blocked", "user"));
         }
 
         public async Task<OperationDetails> UnblockUserAsync(string UserId)
         {
-            ApplicationUser user = await Database.UserManager.FindByIdAsync(UserId);
-            if (user != null)
-            {
-                await Database.UserManager.RemoveFromRoleAsync(user.Id, "blocked");
-                await Database.UserManager.AddToRoleAsync(user.Id, "user");
-                return (new OperationDetails(true, "User was Unblocked", "user"));
-            }
-            else return new OperationDetails(false, "User with this id not exists", "UserId");
+            if (UserId == null || UserId == "") throw new ValidationException("Incorrect user id", UserId);
+            User user = Database.QUserManager.Get(UserId);
+            if (user == null) throw new ValidationException("User with this id not exists", UserId);
+            await Database.UserManager.RemoveFromRoleAsync(user.UserId, "blocked");
+            await Database.UserManager.AddToRoleAsync(user.UserId, "user");
+            return (new OperationDetails(true, "User was Unblocked", "user"));
         }
     }
 }

@@ -25,35 +25,31 @@ namespace Qwerty.BLL.Services
             await _database.SaveAsync();
             return new OperationDetails(true, "Succses deleted", "message");
         }
-        public async Task<MessageDTO> GetMessage(int MessageId)
+        public MessageDTO GetMessage(int MessageId)
         {
             MessageDTO message = null;
-            await Task.Run(() =>
-            {
-                Message messageBoof = _database.MessageManager.Get(MessageId);
-                message = Mapper.Map<Message, MessageDTO>(messageBoof);
-            });
+            Message messageBoof = _database.MessageManager.Get(MessageId);
+            if (messageBoof != null) message = Mapper.Map<Message, MessageDTO>(messageBoof);
             return message;
         }
         public async Task<OperationDetails> Send(MessageDTO messageDTO)
         {
+            if(messageDTO == null) throw new ValidationException("This is message empty.", "message");
             Message message = _database.MessageManager.Get(messageDTO.IdMessage);
-            if (message == null)
-            {
-                message = Mapper.Map<MessageDTO, Message>(messageDTO);
-                _database.MessageManager.Create(message);
-                await _database.SaveAsync();
-                return new OperationDetails(true, "Message sended successfully", "message");
-            }
-            else return new OperationDetails(false, "This is message already exist", "message");
+            if (message != null) throw new ValidationException("This is message already exist", "message");
+            message = Mapper.Map<MessageDTO, Message>(messageDTO);
+            _database.MessageManager.Create(message);
+            await _database.SaveAsync();
+            return new OperationDetails(true, "Message sended successfully", "message");
 
         }
         public async Task<IEnumerable<MessageDTO>> GetLastMessages(string RecipientUserId)
         {
             List<MessageDTO> resultMessages = null;
+            User user = _database.QUserManager.Get(RecipientUserId);
+            if (user == null) return resultMessages;
             await Task.Run(() =>
             {
-                User user = _database.QUserManager.Get(RecipientUserId);
                 var LastReceivedMessages = (from x in user.RecivedMessages
                                             group x by x.IdSender into SenderAndYourMessages
                                             select new
@@ -61,7 +57,7 @@ namespace Qwerty.BLL.Services
                                                 LastMessageSender = SenderAndYourMessages.OrderByDescending(x => x.DateAndTimeMessage).First(),
                                                 UserId = SenderAndYourMessages.Key
                                             }).Select(x => x.LastMessageSender).ToList();
-                var LastSendedMessage = (from x in user.SendMessages 
+                var LastSendedMessage = (from x in user.SendMessages
                                          group x by x.IdRecipient into RecipientAndYourMessages
                                          select new
                                          {
@@ -91,10 +87,13 @@ namespace Qwerty.BLL.Services
         }
         public async Task<IEnumerable<MessageDTO>> GetAllMessagesFromDialog(string SenderId, string RecepientId)
         {
-            List<MessageDTO> Messages = new List<MessageDTO>();
+            List<MessageDTO> Messages = null;
+            User Sender = _database.QUserManager.Get(SenderId);
+            User Recipient = _database.QUserManager.Get(SenderId);
+            if (Sender == null || Recipient == null) return Messages;
+            else Messages = new List<MessageDTO>();
             await Task.Run(() =>
             {
-                User Sender = _database.QUserManager.Get(SenderId);
                 foreach (var message in Sender.SendMessages.Where(x => x.IdRecipient == RecepientId))
                 {
                     Messages.Add(Mapper.Map<Message, MessageDTO>(message));

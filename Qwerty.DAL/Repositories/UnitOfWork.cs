@@ -29,7 +29,7 @@ namespace Qwerty.DAL.Repositories
         {
             _database = new ApplicationContext(connectionString);
         }
-        public UserFriendsRepository UserFriendsManager
+        public IRepositoryWithTwoKeys<UserFriends> UserFriendsManager
         {
             get
             {
@@ -58,7 +58,7 @@ namespace Qwerty.DAL.Repositories
             }
         }
 
-        public FriendRepository FriendManager
+        public IRepository<Friend,string> FriendManager
         {
             get
             {
@@ -67,7 +67,7 @@ namespace Qwerty.DAL.Repositories
                 return _friendManager;
             }
         }
-        public UserRepository QUserManager
+        public IRepository<User,string> QUserManager
         {
             get
             {
@@ -77,7 +77,7 @@ namespace Qwerty.DAL.Repositories
             }
         }
 
-        public UserProfileRepository ProfileManager
+        public IRepository<UserProfile, string> ProfileManager
         {
             get
             {
@@ -87,7 +87,7 @@ namespace Qwerty.DAL.Repositories
             }
         }
 
-        public MessageRepository MessageManager
+        public IRepository<Message, int> MessageManager
         {
             get
             {
@@ -97,7 +97,7 @@ namespace Qwerty.DAL.Repositories
             }
         }
 
-        public FriendshipRequestRepository RequestManager
+        public IRepositoryWithTwoKeys<FriendshipRequest> RequestManager
         {
             get
             {

@@ -161,7 +161,6 @@
     <Compile Include="Controllers\FriendsController.cs" />
     <Compile Include="Controllers\FriendshipRequestController.cs" />
     <Compile Include="Controllers\MessageController.cs" />
-    <Compile Include="Filters\AuthorizeAttribute.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -188,6 +187,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Filters\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Qwerty.BLL\Qwerty.BLL.csproj">

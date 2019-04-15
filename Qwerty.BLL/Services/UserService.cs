@@ -22,36 +22,29 @@ namespace Qwerty.BLL.Services
             Database = uow;
         }
 
-        public async Task<OperationDetails> Create(UserDTO userDto)
+        public async Task<OperationDetails> CreateUserAsync(UserDTO userDto)
         {
             ApplicationUser user = await Database.UserManager.FindByNameAsync(userDto.UserName);
-            if (user == null)
+            if (user != null) throw new ValidationException("User with this login already exists", userDto.UserName);
+            user = new ApplicationUser { UserName = userDto.UserName };
+            var result = await Database.UserManager.CreateAsync(user, userDto.Password);
+            if (result.Errors.Count() > 0) throw new ValidationException("Error creating user", result.Errors.FirstOrDefault());
+            if (userDto.Roles.Count() > 0)
             {
-                user = new ApplicationUser { UserName = userDto.UserName };
-                var result = await Database.UserManager.CreateAsync(user, userDto.Password);
-                if (result.Errors.Count() > 0)
-                    return new OperationDetails(false, result.Errors.FirstOrDefault(), "");
-                if(userDto.Roles.Count() > 0)
+                foreach (var role in userDto.Roles)
                 {
-                    foreach(var role in userDto.Roles)
-                    {
-                        Database.UserManager.AddToRole(user.Id, role);
-                    }
+                    Database.UserManager.AddToRole(user.Id, role);
                 }
-                User Quser = new User() { ApplicationUser = user, Login = user.UserName, Password = userDto.Password, UserId = user.Id };
-                UserProfile profile = new UserProfile() { UserId = Quser.UserId, User = Quser, Name = userDto.Name, Surname = userDto.Surname };
-                Database.QUserManager.Create(Quser);
-                Database.ProfileManager.Create(profile);
-                await Database.SaveAsync();
-                return new OperationDetails(true, "Registration successful", "user");
             }
-            else
-            {
-                return new OperationDetails(false, "User with this login already exists", "UserName");
-            }
+            User Quser = new User() { ApplicationUser = user, Login = user.UserName, Password = userDto.Password, UserId = user.Id };
+            UserProfile profile = new UserProfile() { UserId = Quser.UserId, User = Quser, Name = userDto.Name, Surname = userDto.Surname };
+            Database.QUserManager.Create(Quser);
+            Database.ProfileManager.Create(profile);
+            await Database.SaveAsync();
+            return new OperationDetails(true, "Registration successful", "user");
         }
 
-        public async Task<UserDTO> FindUser(string UserName, string Password)
+        public async Task<UserDTO> FindUserAsync(string UserName, string Password)
         {
             ApplicationUser user = await Database.UserManager.FindByNameAsync(UserName);
             if (user?.User.Password == Password)
@@ -75,9 +68,10 @@ namespace Qwerty.BLL.Services
             else return null;
         }
 
-        public async Task<UserDTO> FindUserByUsername(string UserName)
+        public UserDTO FindUserByUsername(string UserName)
         {
-            ApplicationUser user = await Database.UserManager.FindByNameAsync(UserName);
+            ApplicationUser user = Database.UserManager.FindByName(UserName);
+            if (user == null) throw new ValidationException("User is not found", UserName);
             UserProfile profile = user.User.UserProfile;
             return new UserDTO()
             {
@@ -95,9 +89,10 @@ namespace Qwerty.BLL.Services
             };
         }
 
-        public async Task<UserDTO> FindUserById(string UserId)
+        public async Task<UserDTO> FindUserByIdAsync(string UserId)
         {
             ApplicationUser user = await Database.UserManager.FindByIdAsync(UserId);
+            if (user == null) throw new ValidationException("User is not found", UserId);
             UserProfile profile = user.User.UserProfile;
             return new UserDTO()
             {
@@ -117,24 +112,21 @@ namespace Qwerty.BLL.Services
 
         public async Task<OperationDetails> ChangeProfileInformation(UserDTO userDTO)
         {
-            ApplicationUser user = await Database.UserManager.FindByNameAsync(userDTO.UserName);
-            if (user != null)
-            {
-                UserProfile profile = user.User.UserProfile;
-                profile.Name = userDTO.Name;
-                profile.Surname = userDTO.Surname;
-                profile.Phone = userDTO.Phone;
-                profile.AboutUrl = userDTO.AboutUrl;
-                profile.City = userDTO.City;
-                profile.Country = userDTO.Country;
-                profile.Email = userDTO.Email;
-                Database.ProfileManager.Update(profile);
-                await Database.SaveAsync();
-                return new OperationDetails(true, "User successfully changed", "UserProfile");
-            }
-            else return new OperationDetails(false, "User is not found", "user");
+            ApplicationUser user = Database.UserManager.FindById(userDTO.Id);
+            if (user == null) throw new ValidationException("User is not found", userDTO.Id);
+            UserProfile profile = user.User.UserProfile;
+            profile.Name = userDTO.Name;
+            profile.Surname = userDTO.Surname;
+            profile.Phone = userDTO.Phone;
+            profile.AboutUrl = userDTO.AboutUrl;
+            profile.City = userDTO.City;
+            profile.Country = userDTO.Country;
+            profile.Email = userDTO.Email;
+            Database.ProfileManager.Update(profile);
+            await Database.SaveAsync();
+            return new OperationDetails(true, "User successfully changed", "UserProfile");
         }
-
+        //TEST
         public async Task<OperationDetails> DeleteUser(string UserId)
         {
             ApplicationUser user = await Database.UserManager.FindByIdAsync(UserId);
@@ -183,16 +175,13 @@ namespace Qwerty.BLL.Services
 
         public async Task<OperationDetails> UploadImage(string ImageUrl, string UserName)
         {
-            ApplicationUser user = await Database.UserManager.FindByNameAsync(UserName);
-            if (user != null)
-            {
-                UserProfile profile = user.User.UserProfile;
-                profile.ImageUrl = ImageUrl;
-                Database.ProfileManager.Update(profile);
-                await Database.SaveAsync();
-                return new OperationDetails(true, ImageUrl, "profile");
-            }
-            else return new OperationDetails(false, "User is not found", "user");
+            ApplicationUser user =  Database.UserManager.FindByName(UserName);
+            if (user == null) throw new ValidationException("User is not found", UserName);
+            UserProfile profile = user.User.UserProfile;
+            profile.ImageUrl = ImageUrl;
+            Database.ProfileManager.Update(profile);
+            await Database.SaveAsync();
+            return new OperationDetails(true, ImageUrl, "profile");
         }
 
         public IList<string> GetRolesByUserId(string id)
