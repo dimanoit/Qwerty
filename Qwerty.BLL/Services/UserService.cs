@@ -24,6 +24,7 @@ namespace Qwerty.BLL.Services
 
         public async Task<OperationDetails> CreateUserAsync(UserDTO userDto)
         {
+            if (userDto == null) throw new ValidationException("UserDTO was null", "");
             ApplicationUser user = await Database.UserManager.FindByNameAsync(userDto.UserName);
             if (user != null) throw new ValidationException("User with this login already exists", userDto.UserName);
             user = new ApplicationUser { UserName = userDto.UserName };
@@ -126,18 +127,7 @@ namespace Qwerty.BLL.Services
             await Database.SaveAsync();
             return new OperationDetails(true, "User successfully changed", "UserProfile");
         }
-        //TEST
-        public async Task<OperationDetails> DeleteUser(string UserId)
-        {
-            ApplicationUser user = await Database.UserManager.FindByIdAsync(UserId);
-            if (user != null)
-            {
-                Database.UserManager.Delete(user);
-                await Database.SaveAsync();
-                return new OperationDetails(true, "User successfully deleted", "user");
-            }
-            else return new OperationDetails(false, "User is not found", "user");
-        }
+        
 
         public async Task<IEnumerable<UserDTO>> GetUsers(string Name = null, string Surname = null, string Country = null, string City = null)
         {

@@ -31,8 +31,7 @@ namespace Qwerty.WEB.Controllers
             return UserService.FindUserByUsername(UserName);
         }
 
-        public FriendsController(IFriendService friendService, IMessageService messageService,
-            IFriendshipRequestService friendshipRequestService)
+        public FriendsController(IFriendService friendService, IMessageService messageService)
         {
             _friendService = friendService;
             _messageService = messageService;

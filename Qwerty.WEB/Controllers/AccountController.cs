@@ -22,12 +22,7 @@ namespace UIWebApi.Controllers
     {
 
         public IUserService UserService => Request.GetOwinContext().GetUserManager<IUserService>();
-        private IFriendService _friendService;
 
-        public AccountController(IFriendService friendService)
-        {
-            _friendService = friendService;
-        }
 
         private UserDTO GetCurrentUser()
         {

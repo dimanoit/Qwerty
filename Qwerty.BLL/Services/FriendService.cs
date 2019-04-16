@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Qwerty.BLL.Services
 {
-    public class FriendService : IFriendService
+    public class FriendService : IFriendService, IDisposable
     {
         private IUnitOfWork _database;
         public FriendService(IUnitOfWork uow)
@@ -123,5 +123,9 @@ namespace Qwerty.BLL.Services
             return friendsProfilies;
         }
 
+        public void Dispose()
+        {
+            _database.Dispose();
+        }
     }
 }

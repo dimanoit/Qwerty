@@ -10,8 +10,10 @@ namespace Qwerty.WEB.Models
     {
         public string UserId { get; set; }
 
+        [Required]
         public string Name { get; set; }
 
+        [Required]
         public string Surname { get; set; }
 
         [Phone]

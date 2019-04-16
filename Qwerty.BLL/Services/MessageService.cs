@@ -12,7 +12,7 @@ using Qwerty.DAL.Entities;
 
 namespace Qwerty.BLL.Services
 {
-    public class MessageService : IMessageService
+    public class MessageService : IMessageService, IDisposable
     {
         private IUnitOfWork _database;
         public MessageService(IUnitOfWork uow)
@@ -104,6 +104,10 @@ namespace Qwerty.BLL.Services
                 }
             });
             return Messages.OrderBy(x => x.DateAndTimeMessage);
+        }
+        public void Dispose()
+        {
+            _database.Dispose();
         }
 
     }

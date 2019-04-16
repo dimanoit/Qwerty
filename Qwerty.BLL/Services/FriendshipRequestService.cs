@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Qwerty.BLL.Services
 {
-    public class FriendshipRequestService : IFriendshipRequestService
+    public class FriendshipRequestService : IFriendshipRequestService, IDisposable
     {
         private IUnitOfWork _database;
         public FriendshipRequestService(IUnitOfWork uow)
@@ -37,6 +37,7 @@ namespace Qwerty.BLL.Services
         
         public async Task<OperationDetails> Send(FriendshipRequestDTO friendshipRequesDTO)
         {
+
             FriendshipRequest request = _database.RequestManager.Get(friendshipRequesDTO.RecipientUserId, friendshipRequesDTO.SenderUserId);
             if (request != null) throw new ValidationException("This is request already exist", "message");
             request = Mapper.Map<FriendshipRequestDTO, FriendshipRequest>(friendshipRequesDTO);
@@ -75,6 +76,10 @@ namespace Qwerty.BLL.Services
                 }
             });
             return requestDTO;
+        }
+        public void Dispose()
+        {
+            _database.Dispose();
         }
 
     }
