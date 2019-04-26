@@ -67,7 +67,7 @@ namespace Qwerty.WEB.Controllers
             }
             catch (Exception)
             {
-                return BadRequest("Server is not responding.");
+                return InternalServerError();
             }
         }
 
@@ -92,7 +92,7 @@ namespace Qwerty.WEB.Controllers
             }
             catch (Exception)
             {
-                return BadRequest("Server is not responding.");
+                return InternalServerError();
             }
         }
 
@@ -121,7 +121,7 @@ namespace Qwerty.WEB.Controllers
             }
             catch (Exception)
             {
-                return BadRequest("Server is not responding.");
+                return InternalServerError();
             }
         }
 

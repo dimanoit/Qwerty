@@ -59,7 +59,7 @@ namespace UIWebApi.Controllers
             }
             catch (Exception)
             {
-                return BadRequest("Server is not responding.");
+                return InternalServerError();
             }
         }
 
@@ -81,7 +81,7 @@ namespace UIWebApi.Controllers
             }
             catch (Exception)
             {
-                return BadRequest("Server is not responding.");
+                return InternalServerError();
             }
         }
 
@@ -111,7 +111,7 @@ namespace UIWebApi.Controllers
             }
             catch (Exception)
             {
-                return BadRequest("Server is not responding.");
+                return InternalServerError();
             }
         }
 
@@ -146,7 +146,7 @@ namespace UIWebApi.Controllers
             }
             catch (Exception)
             {
-                return BadRequest("Server is not responding.");
+                return InternalServerError();
             }
 
         }
@@ -168,7 +168,7 @@ namespace UIWebApi.Controllers
             }
             catch (Exception)
             {
-                return BadRequest("Server is not responding.");
+                return InternalServerError();
             }
         }
     }
