@@ -21,6 +21,8 @@ namespace Qwerty.BLL.Services
         }
         public async Task<OperationDetails> DeleteMessage(int MessageId)
         {
+            Message messageToDelete = _database.MessageManager.Get(MessageId);
+            if (messageToDelete == null) throw new ValidationException("There is no such message.",MessageId.ToString());
             _database.MessageManager.Delete(MessageId);
             await _database.SaveAsync();
             return new OperationDetails(true, "Succses deleted", "message");

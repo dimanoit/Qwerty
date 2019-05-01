@@ -85,6 +85,29 @@ namespace UIWebApi.Controllers
             }
         }
 
+        [AllowAnonymous]
+        [HttpDelete]
+        [Route("{userId}")]
+        public async Task<IHttpActionResult> DeleteUser([FromUri] string userId)
+        {
+            try
+            {
+                //var user = GetCurrentUser();
+                //if (user == null || user.Id != userId) throw new ValidationException("Current user not found", "");
+                await UserService.DeleteUser(userId);
+                return Ok();
+            }
+            catch (ValidationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
+
+
         [HttpPost]
         [Route("{userId}/uploadImage")]
         public async Task<IHttpActionResult> UploadImage([FromUri] string userId)

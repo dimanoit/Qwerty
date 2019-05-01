@@ -19,7 +19,6 @@ namespace Qwerty.WEB.Controllers
     [RoutePrefix("api/messages")]
     public class MessageController : ApiController
     {
-
         private UserDTO GetCurrentUser()
         {
             var IdentityClaims = (ClaimsIdentity)User.Identity;
@@ -32,6 +31,25 @@ namespace Qwerty.WEB.Controllers
         public MessageController(IMessageService messageService)
         {
             _messageService = messageService;
+        }
+
+        [HttpDelete]
+        [Route("{messageId}")]
+        public async Task<IHttpActionResult> DeleteMessage([FromUri]int messageId)
+        {
+            try
+            {
+                OperationDetails details = await _messageService.DeleteMessage(messageId);
+                return Ok(details.Message);
+            }
+            catch (ValidationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception)
+            {
+                return InternalServerError();
+            }
         }
 
         [Route("{userId}/dialogs")]
@@ -77,7 +95,7 @@ namespace Qwerty.WEB.Controllers
         {
             try
             {
-                if(ModelState.IsValid == false) throw new ValidationException("Invalid request", "");
+                if (ModelState.IsValid == false) throw new ValidationException("Invalid request", "");
                 UserDTO user = GetCurrentUser();
                 if (user == null || user.Id != message.IdSender) throw new ValidationException("Invalid request", "");
                 MessageDTO messageS = Mapper.Map<MessageViewModel, MessageDTO>(message);
@@ -107,7 +125,7 @@ namespace Qwerty.WEB.Controllers
                 UserDTO Sender = await UserService.FindUserByIdAsync(SenderId);
                 List<MessageViewModel> AllMessages = null;
                 var MessagesDTO = await _messageService.GetAllMessagesFromDialog(Sender.Id, user.Id);
-                if (MessagesDTO == null) throw new ValidationException("You have no messages with this user.","");
+                if (MessagesDTO == null) throw new ValidationException("You have no messages with this user.", "");
                 AllMessages = new List<MessageViewModel>();
                 foreach (var message in MessagesDTO)
                 {

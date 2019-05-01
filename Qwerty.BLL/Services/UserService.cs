@@ -111,6 +111,34 @@ namespace Qwerty.BLL.Services
             };
         }
 
+        public async Task<OperationDetails> DeleteUser(string userId)
+        {
+            ApplicationUser user = Database.UserManager.FindById(userId);
+            if (user == null) throw new ValidationException("User not found", "");
+            var UserRoles = this.GetRolesByUserId(userId);
+            if (UserRoles.Contains("deleted") == false)
+            {
+                Database.UserManager.AddToRole(userId, "deleted");
+            }else throw new ValidationException("User already delted", "");
+            await Database.SaveAsync();
+            return new OperationDetails(true,"Successfully deleted", userId);
+        }
+
+        public async Task<OperationDetails> RestoreAccount(string userId)
+        {
+            ApplicationUser user = Database.UserManager.FindById(userId);
+            if (user == null) throw new ValidationException("User not found", "");
+            var UserRoles = this.GetRolesByUserId(userId);
+            if (UserRoles.Contains("deleted") == true)
+            {
+                Database.UserManager.RemoveFromRole(userId, "deleted");
+            }
+            else throw new ValidationException("User not delted", "");
+            await Database.SaveAsync();
+            return new OperationDetails(true, "Successfully restore", userId);
+        }
+
+
         public async Task<OperationDetails> ChangeProfileInformation(UserDTO userDTO)
         {
             ApplicationUser user = Database.UserManager.FindById(userDTO.Id);
