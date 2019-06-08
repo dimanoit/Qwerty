@@ -18,9 +18,13 @@ namespace Qwerty.EnvironmentSettings
         public static void RegistrationServices(this IServiceCollection services, string connectionName)
         {
             IConfigurationRoot configuration = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json").Build();
-
             var connectionString = configuration.GetConnectionString(connectionName);
-            services.AddDbContext<ApplicationContext>(options => options.UseSqlServer(connectionString));
+            services.AddDbContext<ApplicationContext>(
+                options =>
+                {
+                    options.UseSqlServer(connectionString);
+                    options.UseLazyLoadingProxies();
+                });
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IMessageService, MessageService>();
             services.AddScoped<IFriendService, FriendService>();
@@ -28,10 +32,14 @@ namespace Qwerty.EnvironmentSettings
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IUserService, UserService>();
 
-            services.AddIdentity<ApplicationUser, IdentityRole>(opts => { opts.User.RequireUniqueEmail = true; })
+            services.AddIdentity<ApplicationUser, IdentityRole>(
+                opts =>
+                {
+                    opts.User.RequireUniqueEmail = true;
+                })
                 .AddEntityFrameworkStores<ApplicationContext>()
                 .AddUserManager<ApplicationUserManager>()
-                .AddDefaultTokenProviders();
+                .AddRoleManager<ApplicationRoleManager>();
         }
     }
 }

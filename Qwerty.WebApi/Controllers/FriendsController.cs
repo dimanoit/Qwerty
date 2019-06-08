@@ -16,7 +16,6 @@ using Qwerty.DAL.Entities;
 
 namespace Qwerty.WEB.Controllers
 {
-    [Authorize(Roles = "user")]
     [Route("api/Friends")]
     [ApiController]
     public class FriendsController : ControllerBase

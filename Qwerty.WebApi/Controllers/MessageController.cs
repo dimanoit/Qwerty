@@ -13,7 +13,6 @@ using Qwerty.DAL.Entities;
 
 namespace Qwerty.WEB.Controllers
 {
-    [Authorize(Roles = "user")]
     [Route("api/messages")]
     [ApiController]
     public class MessageController : ControllerBase

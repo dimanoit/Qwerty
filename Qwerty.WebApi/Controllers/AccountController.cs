@@ -15,7 +15,6 @@ using Qwerty.DAL.Entities;
 
 namespace UIWebApi.Controllers
 {
-    [Authorize(Roles = "user")]
     [Route("api/Account")]
     [ApiController]
     public class AccountController : ControllerBase
@@ -65,9 +64,10 @@ namespace UIWebApi.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpGet]
         [Route("")]
-        public async Task<ActionResult> GetAllAccounts( FindUserViewModel findUser)
+        public async Task<ActionResult> GetAllAccounts(FindUserViewModel findUser)
         {
             try
             {

@@ -29,17 +29,20 @@ namespace Qwerty.DAL.EF
         {
             #region UserSettings
             modelBuilder.Entity<User>().HasKey(x => x.UserId);
+            modelBuilder.Entity<User>().ToTable("Users");
             modelBuilder.Entity<User>().Property(x => x.UserId).ValueGeneratedNever();
-            modelBuilder.Entity<ApplicationUser>().HasOne(x => x.User).WithOne(x => x.ApplicationUser);
+            modelBuilder.Entity<ApplicationUser>().HasOne(x => x.User).WithOne(x => x.ApplicationUser).HasForeignKey<User>(x => x.UserId);
             #endregion
 
             #region FriendSettings
+            modelBuilder.Entity<Friend>().ToTable("Friends");
             modelBuilder.Entity<Friend>().HasKey(x => x.FriendId);
             modelBuilder.Entity<Friend>().HasOne(x => x.UserProfile)
-                .WithOne(x => x.ProfileAsFriend).HasForeignKey<Friend>(x => x.UserProfile);
+                .WithOne(x => x.ProfileAsFriend).HasForeignKey<Friend>(x => x.FriendId);
             #endregion
 
             #region Messages
+            modelBuilder.Entity<Message>().ToTable("Messages");
             modelBuilder.Entity<Message>().HasKey(x => x.IdMessage);
             modelBuilder.Entity<Message>().Property(x => x.IdMessage);
             modelBuilder.Entity<Message>().HasOne(x => x.SenderUser)
@@ -49,6 +52,7 @@ namespace Qwerty.DAL.EF
             #endregion
 
             #region FriendshipRequest
+            modelBuilder.Entity<FriendshipRequest>().ToTable("FriendshipRequests");
             modelBuilder.Entity<FriendshipRequest>().HasKey(x => new { x.SenderUserId, x.RecipientUserId });
             modelBuilder.Entity<FriendshipRequest>().HasOne(x => x.RecipientUser)
                 .WithMany(x => x.ReceiveFriendshipRequests)
@@ -58,11 +62,13 @@ namespace Qwerty.DAL.EF
             #endregion
 
             #region UserProfileSettings
+            modelBuilder.Entity<UserProfile>().ToTable("UserProfiles");
             modelBuilder.Entity<UserProfile>().HasKey(x => x.UserId);
             modelBuilder.Entity<UserProfile>().HasOne(x => x.User).WithOne(x => x.UserProfile);
             #endregion
 
             #region UserFriendsSettings
+            modelBuilder.Entity<UserFriends>().ToTable("UserFriends");
             modelBuilder.Entity<UserFriends>().HasKey(x => new { x.FriendId, x.UserId });
             modelBuilder.Entity<UserFriends>().HasOne(x => x.User).WithMany(x => x.UserFriends);
             modelBuilder.Entity<UserFriends>().HasOne(x => x.Friend).WithMany(x => x.UserFriends);

@@ -1,5 +1,8 @@
-﻿namespace Qwerty.DAL.Entities
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Qwerty.DAL.Entities
 {
+    [Table("UserProfile")]
     public class UserProfile
     {
         public string UserId { get; set; }

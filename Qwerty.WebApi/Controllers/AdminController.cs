@@ -13,7 +13,6 @@ using Qwerty.DAL.Entities;
 namespace Qwerty.WEB.Controllers
 {
 
-    [Authorize(Roles = "admin")]
     [Route("api/admin")]
     [ApiController]
     public class AdminController : ControllerBase
@@ -77,19 +76,19 @@ namespace Qwerty.WEB.Controllers
         {
             try
             {
-                var user = GetCurrentUser();
-                if (user == null) throw new ValidationException("Can`t find admin account", "");
+                //var user = GetCurrentUser();
+                //if (user == null) throw new ValidationException("Can`t find admin account", "");
                 IEnumerable<UserDTO> users = await UserService.GetUsers();
                 if (users == null) throw new ValidationException("No users", "");
-                return Ok(users.Where(x => x.Id != user.Id));
+                return Ok(users/*.Where(x => x.Id != user.Id)*/);
             }
             catch (ValidationException ex)
             {
                 return BadRequest(ex.Message);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return null;
+                return BadRequest(ex.Message);
             }
         }
     }

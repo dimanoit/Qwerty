@@ -164,7 +164,7 @@ namespace Qwerty.BLL.Services
             await Task.Run(() =>
            {
                var profiles = Database.ProfileManager.GetAll();
-               if (Name != null) profiles = profiles.Where(x => x.Name.Contains(Name));
+                if (Name != null) profiles = profiles.Where(x => x.Name.Contains(Name));
                if (Surname != null) profiles = profiles.Where(x => x.Surname.Contains(Surname));
                if (Country != null) profiles = profiles.Where(x => x.Country == Country);
                if (City != null) profiles = profiles.Where(x => x.City == City);
