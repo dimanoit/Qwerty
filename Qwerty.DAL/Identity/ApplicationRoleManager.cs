@@ -10,7 +10,7 @@ namespace Qwerty.DAL.Identity
 {
     public class ApplicationRoleManager : RoleManager<ApplicationRole>
     {
-        public ApplicationRoleManager(RoleStore<ApplicationRole> store,
+        public ApplicationRoleManager(IRoleStore<ApplicationRole> store,
             IEnumerable<IRoleValidator<ApplicationRole>> roleValidators,
             ILookupNormalizer keyNormalizer,
             IdentityErrorDescriber errors,

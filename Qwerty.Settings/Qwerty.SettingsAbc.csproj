@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp2.2</TargetFrameworks>
+    <SignAssembly>True</SignAssembly>
+    <Version>1.1.0.3</Version>
+    <Copyright>Copyright ©  2019</Copyright>
+    <Description></Description>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
+    <Guid>d89b7a31-25c6-4323-8eec-27bd6608549b</Guid>
+    <ApplicationIcon />
+    <OutputType>Library</OutputType>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="8.1.1" />
+    <PackageReference Include="FluentNHibernate" Version="2.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="2.2.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Qwerty.BLL\Qwerty.BLL.csproj" />
+    <ProjectReference Include="..\Qwerty.DAL\Qwerty.DAL.csproj" />
+  </ItemGroup>
+</Project>

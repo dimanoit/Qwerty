@@ -10,13 +10,5 @@ using Qwerty.DAL.Entities;
 
 namespace Qwerty.Settings
 {
-    public class MapperSetting : AutoMapper.Profile
-    {
-        public MapperSetting()
-        {
-            CreateMap<MessageDTO, Message>().ReverseMap();
-            CreateMap<FriendshipRequestDTO, FriendshipRequest>().ReverseMap();
-            CreateMap<FriendDTO, Friend>().ReverseMap();
-        } 
-    }   
+   
 }

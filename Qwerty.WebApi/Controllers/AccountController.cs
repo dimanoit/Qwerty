@@ -116,19 +116,21 @@ namespace UIWebApi.Controllers
         {
             try
             {
-                var user = GetCurrentUser();
-                if (user == null || user.Id != userId) throw new ValidationException("Current user not found", "");
-                HttpRequest httpRequest = HttpContext.Current.Request;
-                HttpPostedFile postedFile = httpRequest.Files["Image"];
-                if (postedFile == null) throw new ValidationException("File has not been attached", "");
-                if ((postedFile.ContentType.Contains("jpg") || postedFile.ContentType.Contains("png") || postedFile.ContentType.Contains("jpeg")) == false)
-                {
-                    throw new ValidationException("The file has the wrong format.", postedFile.ContentType);
-                }
-                var ImageUrl = "C:/Users/Dima/Documents/Programming/Angular/QwertyAngular/src/assets/ProfileImages/" + postedFile.FileName;
-                postedFile.SaveAs(ImageUrl);
-                OperationDetails operationDetails = await UserService.UploadImage(ImageUrl, user.UserName);
-                return Ok(operationDetails);
+                //var user = GetCurrentUser();
+                //if (user == null || user.Id != userId) throw new ValidationException("Current user not found", "");
+                //HttpRequest httpRequest = HttpContext.Request;
+                //HttpPostedFile postedFile = httpRequest.Files["Image"];
+                //if (postedFile == null) throw new ValidationException("File has not been attached", "");
+                //if ((postedFile.ContentType.Contains("jpg") || postedFile.ContentType.Contains("png") || postedFile.ContentType.Contains("jpeg")) == false)
+                //{
+                //    throw new ValidationException("The file has the wrong format.", postedFile.ContentType);
+                //}
+
+                //var ImageUrl = " ";//"C:/Users/Dima/Documents/Programming/Angular/QwertyAngular/src/assets/ProfileImages/" + postedFile.FileName;
+                //postedFile.SaveAs(ImageUrl);
+                //OperationDetails operationDetails = await UserService.UploadImage(ImageUrl, user.UserName);
+                //return Ok(operationDetails);
+                return Ok();
             }
             catch (ValidationException ex)
             {
