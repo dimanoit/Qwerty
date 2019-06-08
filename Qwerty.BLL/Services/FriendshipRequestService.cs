@@ -56,7 +56,7 @@ namespace Qwerty.BLL.Services
                 User user = _database.QUserManager.Get(SenderUserId);
                 if (user != null)
                 {
-                    var ReciveRequests = user.ReciveFriendshipRequests;
+                    var ReciveRequests = user.ReceiveFriendshipRequests;
                     var SendRequest = user.SendFriendshipRequests;
                     if (ReciveRequests != null || SendRequest != null) requestDTO = new List<FriendshipRequestDTO>();
                     if (ReciveRequests != null)

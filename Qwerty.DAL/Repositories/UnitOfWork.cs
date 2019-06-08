@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNet.Identity.EntityFramework;
-using Qwerty.DAL.EF;
+﻿using Qwerty.DAL.EF;
 using Qwerty.DAL.Entities;
 using Qwerty.DAL.Identity;
 using Qwerty.DAL.Interfaces;
@@ -14,9 +13,6 @@ namespace Qwerty.DAL.Repositories
     public class UnitOfWork : IUnitOfWork, IDisposable
     {
         private ApplicationContext _database;
-
-        private ApplicationUserManager _userManager;
-        private ApplicationRoleManager _roleManager;
         private FriendRepository _friendManager;
         private UserRepository _qUserManager;
         private UserProfileRepository _profileManager;
@@ -24,10 +20,14 @@ namespace Qwerty.DAL.Repositories
         private FriendshipRequestRepository _requestManager;
         private UserFriendsRepository _userFriendsManager;
 
+        public ApplicationUserManager UserManager { get; }
+        public ApplicationRoleManager RoleManager { get; }
 
-        public UnitOfWork(string connectionString)
+        public UnitOfWork(ApplicationContext context, ApplicationUserManager userManager, ApplicationRoleManager applicationRoleManager)
         {
-            _database = new ApplicationContext(connectionString);
+            _database = context;
+            UserManager = userManager;
+            RoleManager = applicationRoleManager;
         }
         public IRepositoryWithTwoKeys<UserFriends> UserFriendsManager
         {
@@ -38,26 +38,7 @@ namespace Qwerty.DAL.Repositories
                 return _userFriendsManager;
             }
         }
-        public ApplicationUserManager UserManager
-        {
-            get
-            {
-                if (_userManager == null)
-                    _userManager = new ApplicationUserManager(new UserStore<ApplicationUser>(_database));
-                return _userManager;
-            }
-        }
-
-        public ApplicationRoleManager RoleManager
-        {
-            get
-            {
-                if (_roleManager == null)
-                    _roleManager = new ApplicationRoleManager(new RoleStore<ApplicationRole>(_database));
-                return _roleManager;
-            }
-        }
-
+       
         public IRepository<Friend,string> FriendManager
         {
             get

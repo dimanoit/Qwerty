@@ -52,7 +52,7 @@ namespace Qwerty.BLL.Services
             if (user == null) return resultMessages;
             await Task.Run(() =>
             {
-                var LastReceivedMessages = (from x in user.RecivedMessages
+                var LastReceivedMessages = (from x in user.ReceivedMessages
                                             group x by x.IdSender into SenderAndYourMessages
                                             select new
                                             {
@@ -100,7 +100,7 @@ namespace Qwerty.BLL.Services
                 {
                     Messages.Add(Mapper.Map<Message, MessageDTO>(message));
                 }
-                foreach (var message in Sender.RecivedMessages.Where(x => x.IdSender == RecepientId))
+                foreach (var message in Sender.ReceivedMessages.Where(x => x.IdSender == RecepientId))
                 {
                     Messages.Add(Mapper.Map<Message, MessageDTO>(message));
                 }

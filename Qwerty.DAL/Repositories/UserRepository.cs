@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Qwerty.DAL.Interfaces;
 using Qwerty.DAL.Entities;
 using Qwerty.DAL.EF;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Qwerty.DAL.Repositories
 {

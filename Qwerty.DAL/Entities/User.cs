@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Qwerty.DAL.Entities
 {
@@ -18,16 +14,16 @@ namespace Qwerty.DAL.Entities
         
         public virtual ICollection<UserFriends> UserFriends { get; set; }
         public virtual ICollection<Message> SendMessages { get; set; }
-        public virtual ICollection<Message> RecivedMessages { get; set; }
-        public virtual ICollection<FriendshipRequest> ReciveFriendshipRequests { get; set; }
+        public virtual ICollection<Message> ReceivedMessages { get; set; }
+        public virtual ICollection<FriendshipRequest> ReceiveFriendshipRequests { get; set; }
         public virtual ICollection<FriendshipRequest> SendFriendshipRequests { get; set; }
         
         public User()
         {
             UserFriends = new List<UserFriends>();
             SendMessages = new List<Message>();
-            RecivedMessages = new List<Message>();
-            ReciveFriendshipRequests = new List<FriendshipRequest>();
+            ReceivedMessages = new List<Message>();
+            ReceiveFriendshipRequests = new List<FriendshipRequest>();
             SendFriendshipRequests = new List<FriendshipRequest>();
         }
     }

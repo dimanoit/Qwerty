@@ -1,16 +1,22 @@
-﻿using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.EntityFramework;
-using Qwerty.DAL.Entities;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Qwerty.DAL.Entities;
 
 namespace Qwerty.DAL.Identity
 {
     public class ApplicationRoleManager : RoleManager<ApplicationRole>
     {
-        public ApplicationRoleManager(RoleStore<ApplicationRole> store) : base(store) { }
+        public ApplicationRoleManager(RoleStore<ApplicationRole> store,
+            IEnumerable<IRoleValidator<ApplicationRole>> roleValidators,
+            ILookupNormalizer keyNormalizer,
+            IdentityErrorDescriber errors,
+            ILogger<RoleManager<ApplicationRole>> logger)
+            : base(store, roleValidators,keyNormalizer, errors, logger)
+        {
+        }
     }
 }

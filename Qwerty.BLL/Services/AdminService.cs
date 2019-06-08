@@ -1,13 +1,13 @@
 ﻿using Qwerty.BLL.DTO;
 using Qwerty.BLL.Infrastructure;
 using Qwerty.BLL.Interfaces;
-using Qwerty.DAL.Entities;
 using Qwerty.DAL.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Qwerty.DAL.Entities;
 
 namespace Qwerty.BLL.Services
 {
@@ -25,8 +25,8 @@ namespace Qwerty.BLL.Services
             if (UserId == null || UserId == "") throw new ValidationException("Incorrect user id", UserId);
             User user = _database.QUserManager.Get(UserId);
             if (user == null) throw new ValidationException("User with this id not exists", UserId);
-            await _database.UserManager.AddToRoleAsync(user.UserId, "blocked");
-            await _database.UserManager.RemoveFromRoleAsync(user.UserId, "user");
+            await _database.UserManager.AddToRoleAsync(user.ApplicationUser, "blocked");
+            await _database.UserManager.RemoveFromRoleAsync(user.ApplicationUser, "user");
             return (new OperationDetails(true, "User was blocked", "user"));
         }
 
@@ -35,8 +35,8 @@ namespace Qwerty.BLL.Services
             if (UserId == null || UserId == "") throw new ValidationException("Incorrect user id", UserId);
             User user = _database.QUserManager.Get(UserId);
             if (user == null) throw new ValidationException("User with this id not exists", UserId);
-            await _database.UserManager.RemoveFromRoleAsync(user.UserId, "blocked");
-            await _database.UserManager.AddToRoleAsync(user.UserId, "user");
+            await _database.UserManager.RemoveFromRoleAsync(user.ApplicationUser, "blocked");
+            await _database.UserManager.AddToRoleAsync(user.ApplicationUser, "user");
             return (new OperationDetails(true, "User was Unblocked", "user"));
         }
 

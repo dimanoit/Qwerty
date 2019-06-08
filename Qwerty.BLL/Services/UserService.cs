@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNet.Identity;
-using Qwerty.BLL.DTO;
+﻿using Qwerty.BLL.DTO;
 using Qwerty.BLL.Infrastructure;
 using Qwerty.BLL.Interfaces;
 using Qwerty.DAL.Entities;
@@ -29,12 +28,12 @@ namespace Qwerty.BLL.Services
             if (user != null) throw new ValidationException("User with this login already exists", userDto.UserName);
             user = new ApplicationUser { UserName = userDto.UserName };
             var result = await Database.UserManager.CreateAsync(user, userDto.Password);
-            if (result.Errors.Count() > 0) throw new ValidationException("Error creating user", result.Errors.FirstOrDefault());
+            if (result.Errors.Count() > 0) throw new ValidationException("Error creating user", result.Errors.ToString());
             if (userDto.Roles.Count() > 0)
             {
                 foreach (var role in userDto.Roles)
                 {
-                    Database.UserManager.AddToRole(user.Id, role);
+                    await Database.UserManager.AddToRoleAsync(user, role);
                 }
             }
             User Quser = new User() { ApplicationUser = user, Login = user.UserName, Password = userDto.Password, UserId = user.Id };
@@ -71,7 +70,8 @@ namespace Qwerty.BLL.Services
 
         public UserDTO FindUserByUsername(string UserName)
         {
-            ApplicationUser user = Database.UserManager.FindByName(UserName);
+            User qUser = Database.QUserManager.GetAll().Where(x => x.ApplicationUser.UserName == UserName).FirstOrDefault();
+            ApplicationUser user = qUser.ApplicationUser;
             if (user == null) throw new ValidationException("User is not found", UserName);
             UserProfile profile = user.User.UserProfile;
             return new UserDTO()
@@ -113,25 +113,26 @@ namespace Qwerty.BLL.Services
 
         public async Task<OperationDetails> DeleteUser(string userId)
         {
-            ApplicationUser user = Database.UserManager.FindById(userId);
+            ApplicationUser user = await Database.UserManager.FindByIdAsync(userId);
             if (user == null) throw new ValidationException("User not found", "");
             var UserRoles = this.GetRolesByUserId(userId);
             if (UserRoles.Contains("deleted") == false)
             {
-                Database.UserManager.AddToRole(userId, "deleted");
-            }else throw new ValidationException("User already delted", "");
+                await Database.UserManager.AddToRoleAsync(user, "deleted");
+            }
+            else throw new ValidationException("User already delted", "");
             await Database.SaveAsync();
-            return new OperationDetails(true,"Successfully deleted", userId);
+            return new OperationDetails(true, "Successfully deleted", userId);
         }
 
         public async Task<OperationDetails> RestoreAccount(string userId)
         {
-            ApplicationUser user = Database.UserManager.FindById(userId);
+            ApplicationUser user = await Database.UserManager.FindByIdAsync(userId);
             if (user == null) throw new ValidationException("User not found", "");
             var UserRoles = this.GetRolesByUserId(userId);
             if (UserRoles.Contains("deleted") == true)
             {
-                Database.UserManager.RemoveFromRole(userId, "deleted");
+                await Database.UserManager.RemoveFromRoleAsync(user, "deleted");
             }
             else throw new ValidationException("User not delted", "");
             await Database.SaveAsync();
@@ -141,7 +142,7 @@ namespace Qwerty.BLL.Services
 
         public async Task<OperationDetails> ChangeProfileInformation(UserDTO userDTO)
         {
-            ApplicationUser user = Database.UserManager.FindById(userDTO.Id);
+            ApplicationUser user = await Database.UserManager.FindByIdAsync(userDTO.Id);
             if (user == null) throw new ValidationException("User is not found", userDTO.Id);
             UserProfile profile = user.User.UserProfile;
             profile.Name = userDTO.Name;
@@ -155,7 +156,7 @@ namespace Qwerty.BLL.Services
             await Database.SaveAsync();
             return new OperationDetails(true, "User successfully changed", "UserProfile");
         }
-        
+
 
         public async Task<IEnumerable<UserDTO>> GetUsers(string Name = null, string Surname = null, string Country = null, string City = null)
         {
@@ -193,7 +194,7 @@ namespace Qwerty.BLL.Services
 
         public async Task<OperationDetails> UploadImage(string ImageUrl, string UserName)
         {
-            ApplicationUser user =  Database.UserManager.FindByName(UserName);
+            ApplicationUser user = await Database.UserManager.FindByNameAsync(UserName);
             if (user == null) throw new ValidationException("User is not found", UserName);
             UserProfile profile = user.User.UserProfile;
             profile.ImageUrl = ImageUrl;
@@ -204,7 +205,13 @@ namespace Qwerty.BLL.Services
 
         public IList<string> GetRolesByUserId(string id)
         {
-            var roles = Database.UserManager.GetRoles(id);
+            IList<string> roles = null;
+            Task task = Task.Run(async () =>
+           {
+               ApplicationUser user = await Database.UserManager.FindByIdAsync(id);
+               roles = await Database.UserManager.GetRolesAsync(user);
+           });
+            task.Wait();
             return roles;
         }
 
