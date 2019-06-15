@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Qwerty.DAL.Entities;
 
-namespace UIWebApi.Controllers
+namespace Qwerty.WEB.Controllers
 {
     [Route("api/Account")]
     [ApiController]

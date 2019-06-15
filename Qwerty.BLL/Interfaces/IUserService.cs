@@ -18,7 +18,7 @@ namespace Qwerty.BLL.Interfaces
         UserDTO FindUserByUsername(string UserName);
         Task<OperationDetails> UploadImage(string ImageUrl, string UserName);
         Task<UserDTO> FindUserByIdAsync(string UserId);
-        IList<string> GetRolesByUserId(string id);
+        Task<IList<string>> GetRolesByUserId(string id);
         Task<OperationDetails> DeleteUser(string userId);
         Task<OperationDetails> RestoreAccount(string userId);
 

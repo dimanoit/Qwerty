@@ -116,7 +116,7 @@ namespace Qwerty.BLL.Services
             ApplicationUser user = await Database.UserManager.FindByIdAsync(userId);
             if (user == null) throw new ValidationException("User not found", "");
             var UserRoles = this.GetRolesByUserId(userId);
-            if (UserRoles.Contains("deleted") == false)
+            if (UserRoles.Result.Contains("deleted") == false)
             {
                 await Database.UserManager.AddToRoleAsync(user, "deleted");
             }
@@ -130,7 +130,7 @@ namespace Qwerty.BLL.Services
             ApplicationUser user = await Database.UserManager.FindByIdAsync(userId);
             if (user == null) throw new ValidationException("User not found", "");
             var UserRoles = this.GetRolesByUserId(userId);
-            if (UserRoles.Contains("deleted") == true)
+            if (UserRoles.Result.Contains("deleted") == true)
             {
                 await Database.UserManager.RemoveFromRoleAsync(user, "deleted");
             }
@@ -184,7 +184,7 @@ namespace Qwerty.BLL.Services
                            ImageUrl = profile.ImageUrl,
                            Phone = profile.Phone,
                            Surname = profile.Surname,
-                           Roles = GetRolesByUserId(profile.UserId).ToArray()
+                           Roles = GetRolesByUserId(profile.UserId).Result.ToArray()
                        });
                    }
                }
@@ -203,16 +203,10 @@ namespace Qwerty.BLL.Services
             return new OperationDetails(true, ImageUrl, "profile");
         }
 
-        public IList<string> GetRolesByUserId(string id)
+        public async Task<IList<string>> GetRolesByUserId(string id)
         {
-            IList<string> roles = null;
-            Task task = Task.Run(async () =>
-           {
-               ApplicationUser user = await Database.UserManager.FindByIdAsync(id);
-               roles = await Database.UserManager.GetRolesAsync(user);
-           });
-            task.Wait();
-            return roles;
+            ApplicationUser user = await Database.UserManager.FindByIdAsync(id);
+            return await Database.UserManager.GetRolesAsync(user);
         }
 
         public void Dispose()
