@@ -33,11 +33,7 @@ namespace Qwerty.EnvironmentSettings
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IUserService, UserService>();
 
-            services.AddIdentity<ApplicationUser, IdentityRole>(
-                opts =>
-                {
-                    opts.User.RequireUniqueEmail = true;
-                })
+            services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationContext>()
                 .AddUserManager<ApplicationUserManager>()
                 .AddRoleManager<ApplicationRoleManager>();

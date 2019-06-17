@@ -44,16 +44,16 @@ namespace Qwerty.BLL.Services
             return new OperationDetails(true, "Registration successful", "user");
         }
 
-        public async Task<UserDTO> FindUserAsync(string UserName, string Password)
+        public async Task<UserDTO> FindUserAsync(string userName, string password)
         {
-            ApplicationUser user = await Database.UserManager.FindByNameAsync(UserName);
-            if (user?.User.Password == Password)
+            ApplicationUser user = await Database.UserManager.FindByNameAsync(userName);
+            if (user?.User.Password.Trim() == password)
             {
                 UserProfile profile = user.User.UserProfile;
                 return new UserDTO()
                 {
                     Name = profile.Name,
-                    Password = Password,
+                    Password = password,
                     AboutUrl = profile.AboutUrl,
                     City = profile.City,
                     Country = profile.Country,
@@ -62,7 +62,7 @@ namespace Qwerty.BLL.Services
                     ImageUrl = profile.ImageUrl,
                     Phone = profile.Phone,
                     Surname = profile.Surname,
-                    UserName = UserName
+                    UserName = userName
                 };
             }
             else return null;

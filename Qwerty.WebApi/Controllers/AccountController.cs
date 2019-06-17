@@ -5,26 +5,24 @@ using Qwerty.BLL.Interfaces;
 using Qwerty.BLL.DTO;
 using Qwerty.BLL.Infrastructure;
 using System.Security.Claims;
-using AutoMapper;
 using System.Linq;
 using System;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Qwerty.DAL.Entities;
+
 
 namespace Qwerty.WEB.Controllers
 {
-    [Route("api/Account")]
+    [Authorize(Roles = "user", AuthenticationSchemes = "Bearer")]
+    [Route("api/[controller]")]
     [ApiController]
     public class AccountController : ControllerBase
     {
         public IUserService UserService;
         private UserDTO GetCurrentUser()
         {
-            var IdentityClaims = (ClaimsIdentity)User.Identity;
-            var UserName = IdentityClaims.FindFirst("sub").Value;
-            return UserService.FindUserByUsername(UserName);
+            var IdentityClaims = (ClaimsIdentity) User.Identity;
+            return UserService.FindUserByUsername(IdentityClaims.Name);
         }
 
         public AccountController(IUserService userService)
@@ -33,7 +31,7 @@ namespace Qwerty.WEB.Controllers
         }
 
         [AllowAnonymous]
-        [Route("Register")]
+        [Route("register")]
         public async Task<ActionResult> Register([FromBody]RegisterModel model)
         {
             try
@@ -64,9 +62,7 @@ namespace Qwerty.WEB.Controllers
             }
         }
 
-        [AllowAnonymous]
         [HttpGet]
-        [Route("")]
         public async Task<ActionResult> GetAllAccounts(FindUserViewModel findUser)
         {
             try
@@ -87,7 +83,6 @@ namespace Qwerty.WEB.Controllers
             }
         }
 
-        [AllowAnonymous]
         [HttpDelete]
         [Route("{userId}")]
         public async Task<ActionResult> DeleteUser( string userId)

@@ -15,6 +15,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Qwerty.EnvironmentSettings;
+using Qwerty.WebApi.Configurations;
 
 namespace Qwerty.WebApi
 {
@@ -31,20 +32,36 @@ namespace Qwerty.WebApi
         {
             services.RegistrationServices("DefaultConnection");
 
+            AutoMapper.Mapper.Initialize(cfg => cfg.AddProfile<MapperSetting>());
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
+                options =>
+                {
+                    options.RequireHttpsMetadata = false;
+                    options.TokenValidationParameters = new TokenValidationParameters()
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = AuthOptions.ISSUER,
+                        ValidateAudience = true,
+                        ValidAudience = AuthOptions.AUDIENCE,
+                        ValidateLifetime = true,
+                        IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(),
+                        ValidateIssuerSigningKey = true,
+                    };
+                });
+
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowLocalHost4200", builder => builder.WithOrigins("http://localhost:4200")
-                                                              .AllowAnyHeader()
-                                                              .AllowAnyMethod()
-                                                              .AllowCredentials());
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials());
             });
 
             services.Configure<MvcOptions>(options =>
             {
                 options.Filters.Add(new CorsAuthorizationFilterFactory("AllowLocalHost4200"));
             });
-
-            AutoMapper.Mapper.Initialize(cfg => cfg.AddProfile<MapperSetting>());
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
@@ -63,6 +80,7 @@ namespace Qwerty.WebApi
                 app.UseHsts();
             }
 
+            app.UseAuthentication();
             app.UseHttpsRedirection();
             app.UseDefaultFiles();
             app.UseStaticFiles();
