@@ -28,7 +28,7 @@ namespace Qwerty.BLL.Services
             if (user != null) throw new ValidationException("User with this login already exists", userDto.UserName);
             user = new ApplicationUser { UserName = userDto.UserName };
             var result = await Database.UserManager.CreateAsync(user, userDto.Password);
-            if (result.Errors.Count() > 0) throw new ValidationException("Error creating user", result.Errors.ToString());
+            if (result.Errors.Count() > 0) return new OperationDetails(false, String.Join(",", result.Errors.Select(x => x.Description)), null);
             if (userDto.Roles.Count() > 0)
             {
                 foreach (var role in userDto.Roles)
@@ -38,8 +38,8 @@ namespace Qwerty.BLL.Services
             }
             User Quser = new User() { ApplicationUser = user, Login = user.UserName, Password = userDto.Password, UserId = user.Id };
             UserProfile profile = new UserProfile() { UserId = Quser.UserId, User = Quser, Name = userDto.Name, Surname = userDto.Surname };
-            Database.QUserManager.Create(Quser);
             Database.ProfileManager.Create(profile);
+            Database.QUserManager.Create(Quser);
             await Database.SaveAsync();
             return new OperationDetails(true, "Registration successful", "user");
         }
@@ -164,7 +164,7 @@ namespace Qwerty.BLL.Services
             await Task.Run(() =>
            {
                var profiles = Database.ProfileManager.GetAll();
-                if (Name != null) profiles = profiles.Where(x => x.Name.Contains(Name));
+               if (Name != null) profiles = profiles.Where(x => x.Name.Contains(Name));
                if (Surname != null) profiles = profiles.Where(x => x.Surname.Contains(Surname));
                if (Country != null) profiles = profiles.Where(x => x.Country == Country);
                if (City != null) profiles = profiles.Where(x => x.City == City);

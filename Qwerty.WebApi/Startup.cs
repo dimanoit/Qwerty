@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -14,7 +15,9 @@ using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Qwerty.BLL.DTO;
 using Qwerty.EnvironmentSettings;
+using Qwerty.WEB.Models;
 using Qwerty.WebApi.Configurations;
 
 namespace Qwerty.WebApi
@@ -32,7 +35,14 @@ namespace Qwerty.WebApi
         {
             services.RegistrationServices("DefaultConnection");
 
-            AutoMapper.Mapper.Initialize(cfg => cfg.AddProfile<MapperSetting>());
+            Mapper.Initialize(cfg =>
+            {
+                cfg.AddProfile<MapperSetting>();
+                cfg.CreateMap<MessageDTO, MessageViewModel>().ReverseMap();
+                cfg.CreateMap<FriendshipRequestViewModel, FriendshipRequestDTO>().ReverseMap();
+            });
+
+
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
                 options =>
@@ -67,7 +77,7 @@ namespace Qwerty.WebApi
 
         }
 
-       
+
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {

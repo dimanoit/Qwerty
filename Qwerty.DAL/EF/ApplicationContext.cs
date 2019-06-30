@@ -31,6 +31,7 @@ namespace Qwerty.DAL.EF
             modelBuilder.Entity<User>().HasKey(x => x.UserId);
             modelBuilder.Entity<User>().ToTable("Users");
             modelBuilder.Entity<User>().Property(x => x.UserId).ValueGeneratedNever();
+            modelBuilder.Entity<User>().HasOne(x => x.UserProfile).WithOne(x => x.User).HasForeignKey<User>(user => user.UserId).OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<ApplicationUser>().HasOne(x => x.User).WithOne(x => x.ApplicationUser).HasForeignKey<User>(x => x.UserId);
             #endregion
 
@@ -64,7 +65,6 @@ namespace Qwerty.DAL.EF
             #region UserProfileSettings
             modelBuilder.Entity<UserProfile>().ToTable("UserProfiles");
             modelBuilder.Entity<UserProfile>().HasKey(x => x.UserId);
-            modelBuilder.Entity<UserProfile>().HasOne(x => x.User).WithOne(x => x.UserProfile);
             #endregion
 
             #region UserFriendsSettings

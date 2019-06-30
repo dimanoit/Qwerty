@@ -25,12 +25,10 @@ namespace Qwerty.WEB.Controllers
         private IFriendService _friendService;
         private IMessageService _messageService;
 
-
-        private UserDTO GetCurrentUser()
+        private async Task<UserDTO> GetCurrentUser()
         {
             var IdentityClaims = (ClaimsIdentity)User.Identity;
-            var UserName = IdentityClaims.FindFirst("sub").Value;
-            return UserService.FindUserByUsername(UserName);
+            return await UserService.FindUserByIdAsync(IdentityClaims.Name);
         }
 
         public FriendsController(IFriendService friendService, IMessageService messageService, IUserService userService)
@@ -45,7 +43,7 @@ namespace Qwerty.WEB.Controllers
         {
             try
             {
-                UserDTO user = GetCurrentUser();
+                UserDTO user = await GetCurrentUser();
                 if (user == null || user.Id != userId) throw new ValidationException("Invalid request", "");
                 IEnumerable<UserDTO> friends = await _friendService.GetFriendsProfiles(user.Id);
                 return Ok(friends);
@@ -66,7 +64,7 @@ namespace Qwerty.WEB.Controllers
         {
             try
             {
-                UserDTO user = GetCurrentUser();
+                UserDTO user = await GetCurrentUser();
                 if (user == null || user.Id != RecepientId) throw new ValidationException("Invalid request", "");
                 OperationDetails operationDetails = await _friendService.AcceptFriend(SenderId, RecepientId);
                 if (!operationDetails.Succedeed) throw new ValidationException("Invalid request", "");

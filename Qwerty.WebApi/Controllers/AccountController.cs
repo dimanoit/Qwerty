@@ -9,7 +9,8 @@ using System.Linq;
 using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.AspNetCore.Http;
+using System.IO;
 
 namespace Qwerty.WEB.Controllers
 {
@@ -19,10 +20,10 @@ namespace Qwerty.WEB.Controllers
     public class AccountController : ControllerBase
     {
         public IUserService UserService;
-        private UserDTO GetCurrentUser()
+        private async Task<UserDTO> GetCurrentUser()
         {
             var IdentityClaims = (ClaimsIdentity) User.Identity;
-            return UserService.FindUserByUsername(IdentityClaims.Name);
+            return await UserService.FindUserByIdAsync(IdentityClaims.Name);
         }
 
         public AccountController(IUserService userService)
@@ -49,28 +50,27 @@ namespace Qwerty.WEB.Controllers
                     Roles = new string[] { "user" }
                 };
                 OperationDetails operationDetails = await UserService.CreateUserAsync(userDto);
-                if (!operationDetails.Succedeed) throw new ValidationException(operationDetails.Message, operationDetails.Property);
                 return Ok(operationDetails);
             }
             catch (ValidationException ex)
             {
                 return BadRequest(ex.Message);
             }
-            catch (Exception)
+            catch (Exception unpredicatableException)
             {
-                return null;
+                return StatusCode(StatusCodes.Status500InternalServerError); 
             }
         }
 
         [HttpGet]
-        public async Task<ActionResult> GetAllAccounts(FindUserViewModel findUser)
+        public async Task<ActionResult> GetAllAccounts([FromQuery]FindUserViewModel findUser)
         {
             try
             {
                 IEnumerable<UserDTO> users = await UserService
                     .GetUsers(findUser?.Name, findUser?.Surname, findUser?.Country, findUser?.City);
                 if (users == null) throw new ValidationException("Users not found.", "");
-                var user = GetCurrentUser();
+                var user = await GetCurrentUser();
                 return Ok(users.Where(x => x.Id != user.Id));
             }
             catch (ValidationException ex)
@@ -89,8 +89,8 @@ namespace Qwerty.WEB.Controllers
         {
             try
             {
-                //var user = GetCurrentUser();
-                //if (user == null || user.Id != userId) throw new ValidationException("Current user not found", "");
+                var user = await GetCurrentUser();
+                if (user == null || user.Id != userId) throw new ValidationException("Current user not found", "");
                 await UserService.DeleteUser(userId);
                 return Ok();
             }
@@ -111,21 +111,21 @@ namespace Qwerty.WEB.Controllers
         {
             try
             {
-                //var user = GetCurrentUser();
-                //if (user == null || user.Id != userId) throw new ValidationException("Current user not found", "");
-                //HttpRequest httpRequest = HttpContext.Request;
-                //HttpPostedFile postedFile = httpRequest.Files["Image"];
-                //if (postedFile == null) throw new ValidationException("File has not been attached", "");
-                //if ((postedFile.ContentType.Contains("jpg") || postedFile.ContentType.Contains("png") || postedFile.ContentType.Contains("jpeg")) == false)
-                //{
-                //    throw new ValidationException("The file has the wrong format.", postedFile.ContentType);
-                //}
-
-                //var ImageUrl = " ";//"C:/Users/Dima/Documents/Programming/Angular/QwertyAngular/src/assets/ProfileImages/" + postedFile.FileName;
-                //postedFile.SaveAs(ImageUrl);
-                //OperationDetails operationDetails = await UserService.UploadImage(ImageUrl, user.UserName);
-                //return Ok(operationDetails);
-                return Ok();
+                var user = await GetCurrentUser();
+                if (user == null || user.Id != userId) throw new ValidationException("Current user not found", "");
+                var postedFile = Request.Form.Files["Image"];
+                if (postedFile == null) throw new ValidationException("File has not been attached", "");
+                if ((postedFile.ContentType.Contains("jpg") || postedFile.ContentType.Contains("png") || postedFile.ContentType.Contains("jpeg")) == false)
+                {
+                    throw new ValidationException("The file has the wrong format.", postedFile.ContentType);
+                }
+                var ImageUrl = "C:/Users/Dima/Documents/Programming/Angular/QwertyAngular/src/assets/ProfileImages/" + postedFile.FileName;
+                using (var stream = new FileStream(ImageUrl, FileMode.Create))
+                {
+                    postedFile.CopyTo(stream);
+                }
+                OperationDetails operationDetails = await UserService.UploadImage(ImageUrl, user.UserName);
+                return Ok(operationDetails);
             }
             catch (ValidationException ex)
             {
@@ -138,7 +138,6 @@ namespace Qwerty.WEB.Controllers
         }
 
         [HttpPut]
-        [Route("")]
         public async Task<ActionResult> ChangeUser([FromBody] UserProfileViewModel userModel)
         {
             try
@@ -153,7 +152,7 @@ namespace Qwerty.WEB.Controllers
                     Name = userModel.Name,
                     Surname = userModel.Surname,
                     Phone = userModel.Phone,
-                    Id = GetCurrentUser().Id
+                    Id = (await GetCurrentUser()).Id
                 };
                 OperationDetails operationDetails = await UserService.ChangeProfileInformation(user);
                 if (operationDetails.Succedeed == false)
@@ -176,11 +175,11 @@ namespace Qwerty.WEB.Controllers
 
         [HttpGet]
         [Route("{userId}")]
-        public ActionResult GetUser(string userId)
+        public async Task<ActionResult> GetUser(string userId)
         {
             try
             {
-                var user = GetCurrentUser();
+                var user = await GetCurrentUser();
                 if (user == null || user.Id != userId) throw new ValidationException("Current user not found", "");
                 return Ok(user);
             }
@@ -190,7 +189,7 @@ namespace Qwerty.WEB.Controllers
             }
             catch (Exception)
             {
-                return null;
+                return StatusCode(500);
             }
         }
     }

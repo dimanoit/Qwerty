@@ -25,11 +25,10 @@ namespace Qwerty.WEB.Controllers
         private IFriendService _friendService;
         private IFriendshipRequestService _friendshipRequestService;
 
-        private UserDTO GetCurrentUser()
+        private async Task<UserDTO> GetCurrentUser()
         {
             var IdentityClaims = (ClaimsIdentity)User.Identity;
-            var UserName = IdentityClaims.FindFirst("sub").Value;
-            return UserService.FindUserByUsername(UserName);
+            return await UserService.FindUserByIdAsync(IdentityClaims.Name);
         }
 
         public FriendshipRequestController(IFriendService friendService, IFriendshipRequestService friendshipRequestService, IUserService userService)
@@ -45,7 +44,7 @@ namespace Qwerty.WEB.Controllers
             try
             {
                 if (ModelState.IsValid == false) throw new ValidationException("Invalid request", "");
-                UserDTO user = GetCurrentUser();
+                UserDTO user = await GetCurrentUser();
                 if (user == null || user.Id != friendshipRequestViewModel.SenderUserId) throw new ValidationException("Invalid request", "");
                 UserDTO Recipient = await UserService.FindUserByIdAsync(friendshipRequestViewModel.RecipientUserId);
                 FriendDTO friend = _friendService.FindFriend(friendshipRequestViewModel.SenderUserId, friendshipRequestViewModel.RecipientUserId);
@@ -70,7 +69,7 @@ namespace Qwerty.WEB.Controllers
             try
             {
                 if (ModelState.IsValid == false) throw new ValidationException("Invalid request", "");
-                UserDTO user = GetCurrentUser();
+                UserDTO user = await GetCurrentUser();
                 if (user == null || user.Id != userId) throw new ValidationException("Invalid request", "");
                 var requests = await _friendshipRequestService.GetAllRequests(userId);
                 if (requests == null) throw new ValidationException("You have no friend requests.", "");

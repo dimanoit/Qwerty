@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Qwerty.DAL.Entities;
+using Microsoft.AspNetCore.Http;
 
 namespace Qwerty.WEB.Controllers
 {
@@ -18,11 +19,10 @@ namespace Qwerty.WEB.Controllers
     [ApiController]
     public class MessageController : ControllerBase
     {
-        private UserDTO GetCurrentUser()
+        private async Task<UserDTO> GetCurrentUser()
         {
             var IdentityClaims = (ClaimsIdentity)User.Identity;
-            var UserName = IdentityClaims.FindFirst("sub").Value;
-            return UserService.FindUserByUsername(UserName);
+            return await UserService.FindUserByIdAsync(IdentityClaims.Name);
         }
 
         public IUserService UserService;
@@ -41,7 +41,7 @@ namespace Qwerty.WEB.Controllers
             try
             {
                 OperationDetails details = await _messageService.DeleteMessage(messageId);
-                return Ok(details.Message);
+                return Ok(Newtonsoft.Json.JsonConvert.SerializeObject(details.Message));
             }
             catch (ValidationException ex)
             {
@@ -59,7 +59,7 @@ namespace Qwerty.WEB.Controllers
         {
             try
             {
-                UserDTO user = GetCurrentUser();
+                UserDTO user = await GetCurrentUser();
                 if (user == null || user.Id != userId) throw new ValidationException("Invalid request", "");
                 var Messages = await _messageService.GetLastMessages(user.Id);
                 List<DialogViewModel> dialogs = null;
@@ -84,20 +84,19 @@ namespace Qwerty.WEB.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (Exception)
+            catch (Exception unpredicatbleException)
             {
-                return null;
+                return StatusCode(StatusCodes.Status500InternalServerError, unpredicatbleException.Message);
             }
         }
 
         [HttpPost]
-        [Route("")]
         public async Task<ActionResult> SendMessage([FromBody] MessageViewModel message)
         {
             try
             {
                 if (ModelState.IsValid == false) throw new ValidationException("Invalid request", "");
-                UserDTO user = GetCurrentUser();
+                UserDTO user = await GetCurrentUser();
                 if (user == null || user.Id != message.IdSender) throw new ValidationException("Invalid request", "");
                 MessageDTO messageS = Mapper.Map<MessageViewModel, MessageDTO>(message);
                 messageS.DateAndTimeMessage = DateTime.Now;
@@ -121,7 +120,7 @@ namespace Qwerty.WEB.Controllers
         {
             try
             {
-                UserDTO user = GetCurrentUser();
+                UserDTO user = await GetCurrentUser();
                 if (user == null || user.Id != userId) throw new ValidationException("Invalid request", "");
                 UserDTO Sender = await UserService.FindUserByIdAsync(SenderId);
                 List<MessageViewModel> AllMessages = null;

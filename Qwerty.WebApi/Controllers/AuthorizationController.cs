@@ -30,8 +30,14 @@ namespace Qwerty.WebApi.Controllers
             var identity = await GetIdentity(person.Username, person.Password);
             if (identity == null) return BadRequest("User don`t exist");
             var result = GenerateToken(identity);
+            string userId = string.Empty; var roles = new List<string>();
+            foreach (var claim in identity.Claims)
+            {
+                if (claim.Type == ClaimsIdentity.DefaultNameClaimType) userId = claim.Value;
+                if (claim.Type == ClaimsIdentity.DefaultRoleClaimType) roles.Add(claim.Value);
+            }
             if (result == null) return NotFound();
-            else return Ok(result);
+            else return Ok(new { result, userId, roles});
         }
 
         private async Task<ClaimsIdentity> GetIdentity(string username, string password)
@@ -41,9 +47,9 @@ namespace Qwerty.WebApi.Controllers
             {
                 var claims = new List<Claim>
                 {
-                    new Claim(ClaimsIdentity.DefaultNameClaimType, username),
+                    new Claim(ClaimsIdentity.DefaultNameClaimType , user.Id),
                 };
-                
+
                 var userRoles = await UserService.GetRolesByUserId(user.Id);
                 foreach (string roleName in userRoles)
                 {

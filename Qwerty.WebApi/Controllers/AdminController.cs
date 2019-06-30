@@ -20,10 +20,10 @@ namespace Qwerty.WEB.Controllers
     {
         private IAdminService _adminService;
         public IUserService UserService;
-        private UserDTO GetCurrentUser()
+        private async Task<UserDTO> GetCurrentUser()
         {
             var IdentityClaims = (ClaimsIdentity)User.Identity;
-            return UserService.FindUserByUsername(IdentityClaims.Name);
+            return await UserService.FindUserByIdAsync(IdentityClaims.Name);
         }
 
         public AdminController(IAdminService adminService, IUserService userService)
@@ -38,7 +38,7 @@ namespace Qwerty.WEB.Controllers
         {
             try
             {
-                OperationDetails operationDetails = await _adminService.BlockUserAsync(UserId);
+               var operationDetails = await _adminService.BlockUserAsync(UserId);
                 return Ok(operationDetails);
             }
             catch (ValidationException ex)
@@ -47,7 +47,7 @@ namespace Qwerty.WEB.Controllers
             }
             catch (Exception)
             {
-                return null;
+                return StatusCode(500);
             }
         }
 
@@ -67,7 +67,7 @@ namespace Qwerty.WEB.Controllers
             }
             catch (Exception)
             {
-                return null;
+                return StatusCode(500);
             }
         }
 
@@ -76,7 +76,7 @@ namespace Qwerty.WEB.Controllers
         {
             try
             {
-                var user = GetCurrentUser();
+                var user = await GetCurrentUser();
                 if (user == null) throw new ValidationException("Can`t find admin account", "");
                 IEnumerable<UserDTO> users = await UserService.GetUsers();
                 if (users == null) throw new ValidationException("No users", "");
