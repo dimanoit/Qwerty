@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using System.IO;
+using Qwerty.WebApi.Filters;
+using Serilog;
 
 namespace Qwerty.WEB.Controllers
 {
@@ -19,178 +21,104 @@ namespace Qwerty.WEB.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-        public IUserService UserService;
-        private async Task<UserDTO> GetCurrentUser()
-        {
-            var IdentityClaims = (ClaimsIdentity) User.Identity;
-            return await UserService.FindUserByIdAsync(IdentityClaims.Name);
-        }
-
+        public IUserService _userService;
         public AccountController(IUserService userService)
         {
-            UserService = userService;
+            _userService = userService;
         }
 
+        [ModelValidationFilter]
         [AllowAnonymous]
         [Route("register")]
         public async Task<ActionResult> Register([FromBody]RegisterModel model)
         {
-            try
+            UserDTO userDto = new UserDTO
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-                UserDTO userDto = new UserDTO
-                {
-                    Password = model.Password,
-                    UserName = model.UserName,
-                    Name = model.Name,
-                    Surname = model.SurName,
-                    Roles = new string[] { "user" }
-                };
-                OperationDetails operationDetails = await UserService.CreateUserAsync(userDto);
-                return Ok(operationDetails);
-            }
-            catch (ValidationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception unpredicatableException)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError); 
-            }
+                Password = model.Password,
+                UserName = model.UserName,
+                Name = model.Name,
+                Surname = model.SurName,
+                Roles = new string[] { "user" }
+            };
+            OperationDetails operationDetails = await _userService.CreateUserAsync(userDto);
+            Log.Information($"User {userDto.UserName} has been registered");
+            return Ok(operationDetails);
         }
 
+        [ModelValidationFilter]
         [HttpGet]
         public async Task<ActionResult> GetAllAccounts([FromQuery]FindUserViewModel findUser)
         {
-            try
-            {
-                IEnumerable<UserDTO> users = await UserService
-                    .GetUsers(findUser?.Name, findUser?.Surname, findUser?.Country, findUser?.City);
-                if (users == null) throw new ValidationException("Users not found.", "");
-                var user = await GetCurrentUser();
-                return Ok(users.Where(x => x.Id != user.Id));
-            }
-            catch (ValidationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
+            IEnumerable<UserDTO> users = await _userService
+                .GetUsers(findUser?.Name, findUser?.Surname, findUser?.Country, findUser?.City);
+            var user = await _userService.FindUserByIdAsync(User.Identity.Name);
+            return Ok(users.Where(x => x.Id != user.Id));
         }
 
         [HttpDelete]
+        [CheckCurrentUserFilter]
         [Route("{userId}")]
-        public async Task<ActionResult> DeleteUser( string userId)
+        public async Task<ActionResult> DeleteUser(string userId)
         {
-            try
-            {
-                var user = await GetCurrentUser();
-                if (user == null || user.Id != userId) throw new ValidationException("Current user not found", "");
-                await UserService.DeleteUser(userId);
-                return Ok();
-            }
-            catch (ValidationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return null;
-            }
+            await _userService.DeleteUser(userId);
+            Log.Information($"User {userId} has been deleted");
+            return Ok();
         }
-
 
         [HttpPost]
+        [CheckCurrentUserFilter]
         [Route("{userId}/uploadImage")]
-        public async Task<ActionResult> UploadImage( string userId)
+        public async Task<ActionResult> UploadImage(string userId)
         {
-            try
+            var user = await _userService.FindUserByIdAsync(userId);
+            var postedFile = Request.Form.Files["Image"];
+            if (postedFile == null)
             {
-                var user = await GetCurrentUser();
-                if (user == null || user.Id != userId) throw new ValidationException("Current user not found", "");
-                var postedFile = Request.Form.Files["Image"];
-                if (postedFile == null) throw new ValidationException("File has not been attached", "");
-                if ((postedFile.ContentType.Contains("jpg") || postedFile.ContentType.Contains("png") || postedFile.ContentType.Contains("jpeg")) == false)
-                {
-                    throw new ValidationException("The file has the wrong format.", postedFile.ContentType);
-                }
-                var ImageUrl = "C:/Users/Dima/Documents/Programming/Angular/QwertyAngular/src/assets/ProfileImages/" + postedFile.FileName;
-                using (var stream = new FileStream(ImageUrl, FileMode.Create))
-                {
-                    postedFile.CopyTo(stream);
-                }
-                OperationDetails operationDetails = await UserService.UploadImage(ImageUrl, user.UserName);
-                return Ok(operationDetails);
+                Log.Warning($"User {userId} did not attach the file. 404 returned");
+                return BadRequest("File has not been attached");
             }
-            catch (ValidationException ex)
+            if ((postedFile.ContentType.Contains("jpg") || postedFile.ContentType.Contains("png") || postedFile.ContentType.Contains("jpeg")) == false)
             {
-                return BadRequest(ex.Message);
+                Log.Warning($"User {userId} attached the file with uncorrect type of file. Type of file was {postedFile.ContentType}");
+                return BadRequest("The file has the wrong format.");
             }
-            catch (Exception)
+            var imageUrl = $"{Directory.GetCurrentDirectory()}/ProfileImages/{postedFile.FileName}";
+            using (var stream = new FileStream(imageUrl, FileMode.Create))
             {
-                return null;
+                postedFile.CopyTo(stream);
             }
+            OperationDetails operationDetails = await _userService.UploadImage(imageUrl, user.UserName);
+            Log.Information($"User {user.Id} changed image. New image {imageUrl}");
+            return Ok(operationDetails);
         }
 
+        [ModelValidationFilter]
         [HttpPut]
         public async Task<ActionResult> ChangeUser([FromBody] UserProfileViewModel userModel)
         {
-            try
+            UserDTO user = new UserDTO
             {
-                if (ModelState.IsValid == false) return BadRequest(ModelState);
-                UserDTO user = new UserDTO
-                {
-                    AboutUrl = userModel.AboutUrl,
-                    City = userModel.City,
-                    Country = userModel.Country,
-                    Email = userModel.Email,
-                    Name = userModel.Name,
-                    Surname = userModel.Surname,
-                    Phone = userModel.Phone,
-                    Id = (await GetCurrentUser()).Id
-                };
-                OperationDetails operationDetails = await UserService.ChangeProfileInformation(user);
-                if (operationDetails.Succedeed == false)
-                {
-                    throw new ValidationException(operationDetails.Message, operationDetails.Property);
-                }
-                return Ok(operationDetails);
-            }
-            catch (ValidationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
+                AboutUrl = userModel.AboutUrl,
+                City = userModel.City,
+                Country = userModel.Country,
+                Email = userModel.Email,
+                Name = userModel.Name,
+                Surname = userModel.Surname,
+                Phone = userModel.Phone,
+                Id = userModel.UserId
+            };
 
+            var operationDetails = await _userService.ChangeProfileInformation(user);
+            return Ok(operationDetails);
         }
-
 
         [HttpGet]
         [Route("{userId}")]
+        [CheckCurrentUserFilter]
         public async Task<ActionResult> GetUser(string userId)
         {
-            try
-            {
-                var user = await GetCurrentUser();
-                if (user == null || user.Id != userId) throw new ValidationException("Current user not found", "");
-                return Ok(user);
-            }
-            catch (ValidationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception)
-            {
-                return StatusCode(500);
-            }
+            var user = await _userService.FindUserByIdAsync(userId);
+            return Ok(user);
         }
     }
 }

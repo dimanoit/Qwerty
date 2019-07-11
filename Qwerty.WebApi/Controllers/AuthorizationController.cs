@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using Qwerty.BLL.Interfaces;
 using Qwerty.WebApi.Configurations;
 using Qwerty.WebApi.Models;
+using Serilog;
 
 namespace Qwerty.WebApi.Controllers
 {
@@ -16,11 +17,11 @@ namespace Qwerty.WebApi.Controllers
     public class AuthorizationController : ControllerBase
     {
 
-        public IUserService UserService { get; set; }
+        private IUserService _userService { get; set; }
 
         public AuthorizationController(IUserService userService)
         {
-            UserService = userService;
+            _userService = userService;
         }
 
         [HttpPost]
@@ -28,21 +29,33 @@ namespace Qwerty.WebApi.Controllers
         public async Task<ActionResult> Token(LoginViewModel person)
         {
             var identity = await GetIdentity(person.Username, person.Password);
-            if (identity == null) return BadRequest("User don`t exist");
+            if (identity == null)
+            {
+                Log.Warning($"User {person.Username} don`t exist in database");
+                return BadRequest("User don`t exist");
+            }
             var result = GenerateToken(identity);
-            string userId = string.Empty; var roles = new List<string>();
+            string userId = string.Empty;
+            var roles = new List<string>();
             foreach (var claim in identity.Claims)
             {
                 if (claim.Type == ClaimsIdentity.DefaultNameClaimType) userId = claim.Value;
                 if (claim.Type == ClaimsIdentity.DefaultRoleClaimType) roles.Add(claim.Value);
             }
-            if (result == null) return NotFound();
-            else return Ok(new { result, userId, roles});
+            if (result == null)
+            {
+                Log.Warning($"User {person.Username} don`t exist in database or don`t have claims");
+                return NotFound();
+            }
+            else
+            {
+                return Ok(new { result, userId, roles });
+            }
         }
 
         private async Task<ClaimsIdentity> GetIdentity(string username, string password)
         {
-            var user = await UserService.FindUserAsync(username, password);
+            var user = await _userService.FindUserAsync(username, password);
             if (user != null)
             {
                 var claims = new List<Claim>
@@ -50,7 +63,7 @@ namespace Qwerty.WebApi.Controllers
                     new Claim(ClaimsIdentity.DefaultNameClaimType , user.Id),
                 };
 
-                var userRoles = await UserService.GetRolesByUserId(user.Id);
+                var userRoles = await _userService.GetRolesByUserId(user.Id);
                 foreach (string roleName in userRoles)
                 {
                     claims.Add(new Claim(ClaimsIdentity.DefaultRoleClaimType, roleName));

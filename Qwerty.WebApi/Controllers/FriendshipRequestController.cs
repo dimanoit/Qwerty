@@ -13,6 +13,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Qwerty.DAL.Entities;
+using Qwerty.WebApi.Filters;
+using Serilog;
 
 namespace Qwerty.WEB.Controllers
 {
@@ -21,82 +23,66 @@ namespace Qwerty.WEB.Controllers
     [ApiController]
     public class FriendshipRequestController : ControllerBase
     {
-        public IUserService UserService;
+        private IUserService _userService;
         private IFriendService _friendService;
         private IFriendshipRequestService _friendshipRequestService;
-
-        private async Task<UserDTO> GetCurrentUser()
-        {
-            var IdentityClaims = (ClaimsIdentity)User.Identity;
-            return await UserService.FindUserByIdAsync(IdentityClaims.Name);
-        }
 
         public FriendshipRequestController(IFriendService friendService, IFriendshipRequestService friendshipRequestService, IUserService userService)
         {
             _friendService = friendService;
             _friendshipRequestService = friendshipRequestService;
-            UserService = userService;
+            _userService = userService;
         }
 
         [HttpPost]
         public async Task<ActionResult> SendFriendshipRequest([FromBody] FriendshipRequestViewModel friendshipRequestViewModel)
         {
-            try
+            UserDTO recipient = await _userService.FindUserByIdAsync(friendshipRequestViewModel.RecipientUserId);
+            FriendDTO friend = _friendService.FindFriend(friendshipRequestViewModel.SenderUserId, friendshipRequestViewModel.RecipientUserId);
+            if (friend != null)
             {
-                if (ModelState.IsValid == false) throw new ValidationException("Invalid request", "");
-                UserDTO user = await GetCurrentUser();
-                if (user == null || user.Id != friendshipRequestViewModel.SenderUserId) throw new ValidationException("Invalid request", "");
-                UserDTO Recipient = await UserService.FindUserByIdAsync(friendshipRequestViewModel.RecipientUserId);
-                FriendDTO friend = _friendService.FindFriend(friendshipRequestViewModel.SenderUserId, friendshipRequestViewModel.RecipientUserId);
-                if (friend != null) throw new ValidationException("User is already your friend", "");
-                OperationDetails operationDetails = await _friendshipRequestService
-                    .Send(Mapper.Map<FriendshipRequestViewModel, FriendshipRequestDTO>(friendshipRequestViewModel));
-                return Ok(operationDetails);
+                Log.Warning($"Try send friendship request, but recipient is already was friend." +
+                    $"SenderId {friendshipRequestViewModel.SenderUserId}. RecipientId {friendshipRequestViewModel.RecipientUserId}");
+                return BadRequest("User is already your friend");
             }
-            catch (ValidationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
+            OperationDetails operationDetails = await _friendshipRequestService
+                .Send(Mapper.Map<FriendshipRequestViewModel, FriendshipRequestDTO>(friendshipRequestViewModel));
+            Log.Information($"Friendship request was send from {friendshipRequestViewModel.SenderUserId} to {friendshipRequestViewModel.RecipientUserId}");
+            return Ok(operationDetails);
         }
 
         [HttpGet]
+        [CheckCurrentUserFilter]
         public async Task<ActionResult> GetAllRequests(string userId)
         {
-            try
+            var requests = await _friendshipRequestService.GetAllRequests(userId);
+            if (requests == null)
             {
-                if (ModelState.IsValid == false) throw new ValidationException("Invalid request", "");
-                UserDTO user = await GetCurrentUser();
-                if (user == null || user.Id != userId) throw new ValidationException("Invalid request", "");
-                var requests = await _friendshipRequestService.GetAllRequests(userId);
-                if (requests == null) throw new ValidationException("You have no friend requests.", "");
-                List<RequestProfile> requestProfiles = new List<RequestProfile>();
-                foreach (var el in requests)
+                Log.Warning($"User {userId} dont have friend requests");
+                return BadRequest("You have no friend requests.");
+            }
+            List<RequestProfile> requestProfiles = new List<RequestProfile>();
+            foreach (var el in requests)
+            {
+                UserDTO profile;
+                if (el.SenderUserId == userId)
                 {
-                    UserDTO profile;
-                    if (el.SenderUserId == userId) profile = await UserService.FindUserByIdAsync(el.RecipientUserId);
-                    else profile = await UserService.FindUserByIdAsync(el.SenderUserId);
-                    requestProfiles.Add(new RequestProfile()
-                    {
-                        Request = Mapper.Map<FriendshipRequestDTO, FriendshipRequestViewModel>(el),
-                        Name = profile.Name,
-                        Surname = profile.Surname,
-                        ImageUrl = profile.ImageUrl
-                    });
+                    profile = await _userService.FindUserByIdAsync(el.RecipientUserId);
                 }
-                return Ok(requestProfiles);
+                else
+                {
+                    profile = await _userService.FindUserByIdAsync(el.SenderUserId);
+                }
+
+                requestProfiles.Add(new RequestProfile()
+                {
+                    Request = Mapper.Map<FriendshipRequestDTO, FriendshipRequestViewModel>(el),
+                    Name = profile.Name,
+                    Surname = profile.Surname,
+                    ImageUrl = profile.ImageUrl
+                });
             }
-            catch (ValidationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
+            return Ok(requestProfiles);
         }
     }
 }

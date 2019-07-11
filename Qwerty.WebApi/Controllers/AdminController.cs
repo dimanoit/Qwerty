@@ -1,95 +1,60 @@
 ﻿using Qwerty.BLL.DTO;
 using Qwerty.BLL.Infrastructure;
 using Qwerty.BLL.Interfaces;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Qwerty.DAL.Entities;
+using Serilog;
 
 namespace Qwerty.WEB.Controllers
 {
 
-    [Authorize(Roles="admin",AuthenticationSchemes = "Bearer")]
+    [Authorize(Roles = "admin", AuthenticationSchemes = "Bearer")]
     [Route("api/admin")]
     [ApiController]
     public class AdminController : ControllerBase
     {
         private IAdminService _adminService;
-        public IUserService UserService;
-        private async Task<UserDTO> GetCurrentUser()
-        {
-            var IdentityClaims = (ClaimsIdentity)User.Identity;
-            return await UserService.FindUserByIdAsync(IdentityClaims.Name);
-        }
+        private IUserService _userService;
 
         public AdminController(IAdminService adminService, IUserService userService)
         {
             _adminService = adminService;
-            UserService = userService;
+            _userService = userService;
         }
 
         [HttpPut]
         [Route("block/{UserId}")]
-        public async Task<ActionResult> BlockUser(string UserId)
+        public async Task<ActionResult> BlockUser(string userId)
         {
-            try
-            {
-               var operationDetails = await _adminService.BlockUserAsync(UserId);
-                return Ok(operationDetails);
-            }
-            catch (ValidationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception)
-            {
-                return StatusCode(500);
-            }
+            var operationDetails = await _adminService.BlockUserAsync(userId);
+            Log.Information($"User {userId} was blocked");
+            return Ok(operationDetails);
         }
 
         [HttpPut]
         [Route("unblock/{UserId}")]
-        public async Task<ActionResult> UnblockUser(string UserId)
+        public async Task<ActionResult> UnblockUser(string userId)
         {
-
-            try
-            {
-                OperationDetails operationDetails = await _adminService.UnblockUserAsync(UserId);
-                return Ok(operationDetails);
-            }
-            catch (ValidationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception)
-            {
-                return StatusCode(500);
-            }
+            OperationDetails operationDetails = await _adminService.UnblockUserAsync(userId);
+            Log.Information($"User {userId} was unblocked");
+            return Ok(operationDetails);
         }
 
         [HttpGet]
         public async Task<ActionResult> GetAllUserWithBlockedStatus()
         {
-            try
+            var user = await _userService.FindUserByIdAsync(HttpContext.User.Identity.Name);
+            IEnumerable<UserDTO> users = await _userService.GetUsers();
+            if (users == null)
             {
-                var user = await GetCurrentUser();
-                if (user == null) throw new ValidationException("Can`t find admin account", "");
-                IEnumerable<UserDTO> users = await UserService.GetUsers();
-                if (users == null) throw new ValidationException("No users", "");
-                return Ok(users.Where(x => x.Id != user.Id));
+                Log.Warning("Social network without people");
+                return BadRequest("Social network without people");
             }
-            catch (ValidationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+
+            return Ok(users.Where(x => x.Id != user.Id));
         }
     }
 }

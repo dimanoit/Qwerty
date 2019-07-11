@@ -10,7 +10,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Qwerty.DAL.Entities;
+using Qwerty.WebApi.Filters;
 using Microsoft.AspNetCore.Http;
+using Serilog;
 
 namespace Qwerty.WEB.Controllers
 {
@@ -19,129 +21,94 @@ namespace Qwerty.WEB.Controllers
     [ApiController]
     public class MessageController : ControllerBase
     {
-        private async Task<UserDTO> GetCurrentUser()
-        {
-            var IdentityClaims = (ClaimsIdentity)User.Identity;
-            return await UserService.FindUserByIdAsync(IdentityClaims.Name);
-        }
-
-        public IUserService UserService;
+        private IUserService _userService;
         private IMessageService _messageService;
 
         public MessageController(IMessageService messageService, IUserService userService)
         {
             _messageService = messageService;
-            UserService = userService;
+            _userService = userService;
         }
 
         [HttpDelete]
         [Route("{messageId}")]
         public async Task<ActionResult> DeleteMessage(int messageId)
         {
-            try
-            {
-                OperationDetails details = await _messageService.DeleteMessage(messageId);
-                return Ok(Newtonsoft.Json.JsonConvert.SerializeObject(details.Message));
-            }
-            catch (ValidationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
+            OperationDetails details = await _messageService.DeleteMessage(messageId);
+            Log.Information($"Message {messageId} was deleted");
+            return Ok(Newtonsoft.Json.JsonConvert.SerializeObject(details.Message));
         }
 
         [Route("{userId}/dialogs")]
         [HttpGet]
+        [CheckCurrentUserFilter]
         public async Task<ActionResult> GetAllDialogs(string userId)
         {
-            try
+            var Messages = await _messageService.GetLastMessages(userId);
+            List<DialogViewModel> dialogs = null;
+            if (Messages == null)
             {
-                UserDTO user = await GetCurrentUser();
-                if (user == null || user.Id != userId) throw new ValidationException("Invalid request", "");
-                var Messages = await _messageService.GetLastMessages(user.Id);
-                List<DialogViewModel> dialogs = null;
-                if (Messages == null) throw new ValidationException("You dont have dialogs", "");
-                dialogs = new List<DialogViewModel>();
-                foreach (var el in Messages)
+                Log.Warning($"User {userId} dont have dialogs");
+                return BadRequest("You dont have dialogs");
+            }
+
+            dialogs = new List<DialogViewModel>();
+            foreach (var el in Messages)
+            {
+                UserDTO MessageUser = null;
+                if (el.IdSender == userId)
                 {
-                    UserDTO MessageUser = null;
-                    if (el.IdSender == user.Id) MessageUser = await UserService.FindUserByIdAsync(el.IdRecipient);
-                    else MessageUser = await UserService.FindUserByIdAsync(el.IdSender);
-                    dialogs.Add(new DialogViewModel
-                    {
-                        Message = Mapper.Map<MessageDTO, MessageViewModel>(el),
-                        ImageUrl = MessageUser.ImageUrl,
-                        Name = MessageUser.Name,
-                        Surname = MessageUser.Surname
-                    });
+                    MessageUser = await _userService.FindUserByIdAsync(el.IdRecipient);
                 }
-                return Ok(dialogs);
+                else
+                {
+                    MessageUser = await _userService.FindUserByIdAsync(el.IdSender);
+                }
+
+                dialogs.Add(new DialogViewModel
+                {
+                    Message = Mapper.Map<MessageDTO, MessageViewModel>(el),
+                    ImageUrl = MessageUser.ImageUrl,
+                    Name = MessageUser.Name,
+                    Surname = MessageUser.Surname
+                });
             }
-            catch (ValidationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception unpredicatbleException)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, unpredicatbleException.Message);
-            }
+            return Ok(dialogs);
         }
 
         [HttpPost]
+        [ModelValidationFilter]
         public async Task<ActionResult> SendMessage([FromBody] MessageViewModel message)
         {
-            try
-            {
-                if (ModelState.IsValid == false) throw new ValidationException("Invalid request", "");
-                UserDTO user = await GetCurrentUser();
-                if (user == null || user.Id != message.IdSender) throw new ValidationException("Invalid request", "");
-                MessageDTO messageS = Mapper.Map<MessageViewModel, MessageDTO>(message);
-                messageS.DateAndTimeMessage = DateTime.Now;
-                messageS.IdSender = user.Id;
-                OperationDetails details = await _messageService.Send(messageS);
-                return Ok(details);
-            }
-            catch (ValidationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
+            MessageDTO messageDTO = Mapper.Map<MessageViewModel, MessageDTO>(message);
+            messageDTO.DateAndTimeMessage = DateTime.Now;
+            messageDTO.IdSender = message.IdSender;
+            OperationDetails details = await _messageService.Send(messageDTO);
+            Log.Information($"Message was send from {message.IdSender} to {message.IdRecipient}");
+            return Ok(details);
         }
 
         [Route("{userId}/messages/{senderId}")]
         [HttpGet]
+        [CheckCurrentUserFilter]
         public async Task<ActionResult> GetAllMessageFromSender(string userId, string SenderId)
         {
-            try
+            UserDTO Sender = await _userService.FindUserByIdAsync(SenderId);
+            List<MessageViewModel> AllMessages = null;
+            var MessagesDTO = await _messageService.GetAllMessagesFromDialog(Sender.Id, userId);
+            if (MessagesDTO == null)
             {
-                UserDTO user = await GetCurrentUser();
-                if (user == null || user.Id != userId) throw new ValidationException("Invalid request", "");
-                UserDTO Sender = await UserService.FindUserByIdAsync(SenderId);
-                List<MessageViewModel> AllMessages = null;
-                var MessagesDTO = await _messageService.GetAllMessagesFromDialog(Sender.Id, user.Id);
-                if (MessagesDTO == null) throw new ValidationException("You have no messages with this user.", "");
-                AllMessages = new List<MessageViewModel>();
-                foreach (var message in MessagesDTO)
-                {
-                    AllMessages.Add(Mapper.Map<MessageDTO, MessageViewModel>(message));
-                }
-                return Ok(AllMessages);
+                Log.Warning($"User {userId} have no messages from {SenderId}");
+                return BadRequest("You have no messages with this user.");
             }
-            catch (ValidationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
 
+            AllMessages = new List<MessageViewModel>();
+            foreach (var message in MessagesDTO)
+            {
+                AllMessages.Add(Mapper.Map<MessageDTO, MessageViewModel>(message));
+            }
+
+            return Ok(AllMessages);
+        }
     }
 }

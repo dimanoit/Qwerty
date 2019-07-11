@@ -19,6 +19,9 @@ using Qwerty.BLL.DTO;
 using Qwerty.EnvironmentSettings;
 using Qwerty.WEB.Models;
 using Qwerty.WebApi.Configurations;
+using Qwerty.WebApi.Filters;
+using Serilog;
+using Serilog.Formatting.Compact;
 
 namespace Qwerty.WebApi
 {
@@ -41,8 +44,6 @@ namespace Qwerty.WebApi
                 cfg.CreateMap<MessageDTO, MessageViewModel>().ReverseMap();
                 cfg.CreateMap<FriendshipRequestViewModel, FriendshipRequestDTO>().ReverseMap();
             });
-
-
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
                 options =>
@@ -71,6 +72,7 @@ namespace Qwerty.WebApi
             services.Configure<MvcOptions>(options =>
             {
                 options.Filters.Add(new CorsAuthorizationFilterFactory("AllowLocalHost4200"));
+                //options.Filters.Add(new ModelValidationFilter());
             });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
@@ -81,6 +83,10 @@ namespace Qwerty.WebApi
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            Log.Logger = new LoggerConfiguration().ReadFrom
+              .Configuration(Configuration)
+              .CreateLogger();
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -95,6 +101,7 @@ namespace Qwerty.WebApi
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseCors("AllowLocalHost4200");
+            app.UseErrorHandlingMiddleware();
             app.UseMvc();
         }
     }

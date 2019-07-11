@@ -7,12 +7,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using Qwerty.WebApi.Filters;
 using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Qwerty.DAL.Entities;
+using Serilog;
 
 namespace Qwerty.WEB.Controllers
 {
@@ -21,72 +23,45 @@ namespace Qwerty.WEB.Controllers
     [ApiController]
     public class FriendsController : ControllerBase
     {
-        public IUserService UserService;
+        private IUserService _userService;
         private IFriendService _friendService;
         private IMessageService _messageService;
-
-        private async Task<UserDTO> GetCurrentUser()
-        {
-            var IdentityClaims = (ClaimsIdentity)User.Identity;
-            return await UserService.FindUserByIdAsync(IdentityClaims.Name);
-        }
 
         public FriendsController(IFriendService friendService, IMessageService messageService, IUserService userService)
         {
             _friendService = friendService;
             _messageService = messageService;
-            UserService = userService;
+            _userService = userService;
         }
 
         [HttpGet]
-        public async Task<ActionResult> GetAllFriendsAccounts( string userId)
+        [CheckCurrentUserFilter]
+        public async Task<ActionResult> GetAllFriendsAccounts(string userId)
         {
-            try
-            {
-                UserDTO user = await GetCurrentUser();
-                if (user == null || user.Id != userId) throw new ValidationException("Invalid request", "");
-                IEnumerable<UserDTO> friends = await _friendService.GetFriendsProfiles(user.Id);
-                return Ok(friends);
-            }
-            catch (ValidationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
+            IEnumerable<UserDTO> friends = await _friendService.GetFriendsProfiles(userId);
+            return Ok(friends);
         }
 
         [HttpPost]
         [Route("{SenderId}/friend/{RecepientId}")]
-        public async Task<ActionResult> AcceptFriend( string SenderId,  string RecepientId)
+        public async Task<ActionResult> AcceptFriend(string SenderId, string userId)
         {
-            try
+            OperationDetails operationDetails = await _friendService.AcceptFriend(SenderId, userId);
+            if (operationDetails.Succedeed == false)
             {
-                UserDTO user = await GetCurrentUser();
-                if (user == null || user.Id != RecepientId) throw new ValidationException("Invalid request", "");
-                OperationDetails operationDetails = await _friendService.AcceptFriend(SenderId, RecepientId);
-                if (!operationDetails.Succedeed) throw new ValidationException("Invalid request", "");
-                OperationDetails detailsMesage = await _messageService.Send(new MessageDTO()
-                {
-                    DateAndTimeMessage = DateTime.Now,
-                    IdSender = RecepientId,
-                    IdRecipient = SenderId,
-                    TextMessage = "Hi"
-                });
-                if (!detailsMesage.Succedeed) throw new ValidationException("Added in friend but" + detailsMesage.Message, "");
-                return Ok(detailsMesage);
+                Log.Warning($"Fail on accepting friend.Recipient {userId}.Sender {SenderId}");
+                return BadRequest("Fail on accepting friend");
             }
-            catch (ValidationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
 
+            OperationDetails detailsMesage = await _messageService.Send(new MessageDTO()
+            {
+                DateAndTimeMessage = DateTime.Now,
+                IdSender = userId,
+                IdRecipient = SenderId,
+                TextMessage = "Hi"
+            });
+            Log.Information($"User {userId} accepted friend {SenderId}");
+            return Ok(detailsMesage);
+        }
     }
 }

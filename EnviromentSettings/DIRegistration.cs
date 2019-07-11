@@ -19,6 +19,7 @@ namespace Qwerty.EnvironmentSettings
         {
             IConfigurationRoot configuration = new ConfigurationBuilder().
                 SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json").Build();
+
             var connectionString = configuration.GetConnectionString(connectionName);
             services.AddDbContext<ApplicationContext>(
                 options =>
