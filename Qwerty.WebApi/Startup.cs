@@ -20,6 +20,7 @@ using Qwerty.EnvironmentSettings;
 using Qwerty.WEB.Models;
 using Qwerty.WebApi.Configurations;
 using Qwerty.WebApi.Filters;
+using Qwerty.WebApi.HubConfig;
 using Serilog;
 using Serilog.Formatting.Compact;
 
@@ -68,6 +69,7 @@ namespace Qwerty.WebApi
                     .AllowAnyMethod()
                     .AllowCredentials());
             });
+            services.AddSignalR();
 
             services.Configure<MvcOptions>(options =>
             {
@@ -95,6 +97,11 @@ namespace Qwerty.WebApi
             {
                 app.UseHsts();
             }
+
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<MessageHub>("/message");
+            });
 
             app.UseAuthentication();
             app.UseHttpsRedirection();

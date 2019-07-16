@@ -13,6 +13,8 @@ using Qwerty.DAL.Entities;
 using Qwerty.WebApi.Filters;
 using Microsoft.AspNetCore.Http;
 using Serilog;
+using Microsoft.AspNetCore.SignalR;
+using Qwerty.WebApi.HubConfig;
 
 namespace Qwerty.WEB.Controllers
 {
@@ -23,11 +25,13 @@ namespace Qwerty.WEB.Controllers
     {
         private IUserService _userService;
         private IMessageService _messageService;
+        private IHubContext<MessageHub> _hub;
 
-        public MessageController(IMessageService messageService, IUserService userService)
+        public MessageController(IMessageService messageService, IUserService userService, IHubContext<MessageHub> hub)
         {
             _messageService = messageService;
             _userService = userService;
+            _hub = hub;
         }
 
         [HttpDelete]
@@ -35,6 +39,7 @@ namespace Qwerty.WEB.Controllers
         public async Task<ActionResult> DeleteMessage(int messageId)
         {
             OperationDetails details = await _messageService.DeleteMessage(messageId);
+            await _hub.Clients.All.SendAsync("deleteMessage", messageId);
             Log.Information($"Message {messageId} was deleted");
             return Ok(Newtonsoft.Json.JsonConvert.SerializeObject(details.Message));
         }
@@ -84,6 +89,7 @@ namespace Qwerty.WEB.Controllers
             messageDTO.DateAndTimeMessage = DateTime.Now;
             messageDTO.IdSender = message.IdSender;
             OperationDetails details = await _messageService.Send(messageDTO);
+            await _hub.Clients.All.SendAsync("sendMessage", messageDTO);
             Log.Information($"Message was send from {message.IdSender} to {message.IdRecipient}");
             return Ok(details);
         }
