@@ -6,8 +6,6 @@ using Qwerty.DAL.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Qwerty.BLL.Services
@@ -26,9 +24,10 @@ namespace Qwerty.BLL.Services
             if (userDto == null) throw new ValidationException("UserDTO was null", "");
             ApplicationUser user = await Database.UserManager.FindByNameAsync(userDto.UserName);
             if (user != null) throw new ValidationException("User with this login already exists", userDto.UserName);
-            user = new ApplicationUser { UserName = userDto.UserName };
+            user = new ApplicationUser {UserName = userDto.UserName};
             var result = await Database.UserManager.CreateAsync(user, userDto.Password);
-            if (result.Errors.Count() > 0) return new OperationDetails(false, String.Join(",", result.Errors.Select(x => x.Description)), null);
+            if (result.Errors.Count() > 0)
+                return new OperationDetails(false, String.Join(",", result.Errors.Select(x => x.Description)), null);
             if (userDto.Roles.Count() > 0)
             {
                 foreach (var role in userDto.Roles)
@@ -36,8 +35,11 @@ namespace Qwerty.BLL.Services
                     await Database.UserManager.AddToRoleAsync(user, role);
                 }
             }
-            User Quser = new User() { ApplicationUser = user, Login = user.UserName, Password = userDto.Password, UserId = user.Id };
-            UserProfile profile = new UserProfile() { UserId = Quser.UserId, User = Quser, Name = userDto.Name, Surname = userDto.Surname };
+
+            User Quser = new User()
+                {ApplicationUser = user, Login = user.UserName, Password = userDto.Password, UserId = user.Id};
+            UserProfile profile = new UserProfile()
+                {UserId = Quser.UserId, User = Quser, Name = userDto.Name, Surname = userDto.Surname};
             Database.ProfileManager.Create(profile);
             Database.QUserManager.Create(Quser);
             await Database.SaveAsync();
@@ -70,7 +72,8 @@ namespace Qwerty.BLL.Services
 
         public UserDTO FindUserByUsername(string UserName)
         {
-            User qUser = Database.QUserManager.GetAll().Where(x => x.ApplicationUser.UserName == UserName).FirstOrDefault();
+            User qUser = Database.QUserManager.GetAll().Where(x => x.ApplicationUser.UserName == UserName)
+                .FirstOrDefault();
             ApplicationUser user = qUser.ApplicationUser;
             if (user == null) throw new ValidationException("User is not found", UserName);
             UserProfile profile = user.User.UserProfile;
@@ -121,6 +124,7 @@ namespace Qwerty.BLL.Services
                 await Database.UserManager.AddToRoleAsync(user, "deleted");
             }
             else throw new ValidationException("User already delted", "");
+
             await Database.SaveAsync();
             return new OperationDetails(true, "Successfully deleted", userId);
         }
@@ -135,6 +139,7 @@ namespace Qwerty.BLL.Services
                 await Database.UserManager.RemoveFromRoleAsync(user, "deleted");
             }
             else throw new ValidationException("User not delted", "");
+
             await Database.SaveAsync();
             return new OperationDetails(true, "Successfully restore", userId);
         }
@@ -158,37 +163,36 @@ namespace Qwerty.BLL.Services
         }
 
 
-        public async Task<IEnumerable<UserDTO>> GetUsers(string Name = null, string Surname = null, string Country = null, string City = null)
+        public async Task<IEnumerable<UserDTO>> GetUsers(string Name = null, string Surname = null,
+            string Country = null, string City = null)
         {
             List<UserDTO> FindedUsers = null;
-            await Task.Run(() =>
-           {
-               var profiles = Database.ProfileManager.GetAll();
-               if (Name != null) profiles = profiles.Where(x => x.Name.Contains(Name));
-               if (Surname != null) profiles = profiles.Where(x => x.Surname.Contains(Surname));
-               if (Country != null) profiles = profiles.Where(x => x.Country == Country);
-               if (City != null) profiles = profiles.Where(x => x.City == City);
-               if (profiles != null)
-               {
-                   FindedUsers = new List<UserDTO>();
-                   foreach (var profile in profiles)
-                   {
-                       FindedUsers.Add(new UserDTO()
-                       {
-                           Name = profile.Name,
-                           AboutUrl = profile.AboutUrl,
-                           City = profile.City,
-                           Country = profile.Country,
-                           Email = profile.Email,
-                           Id = profile.UserId,
-                           ImageUrl = profile.ImageUrl,
-                           Phone = profile.Phone,
-                           Surname = profile.Surname,
-                           Roles = GetRolesByUserId(profile.UserId).Result.ToArray()
-                       });
-                   }
-               }
-           });
+            var profiles = Database.ProfileManager.GetAll();
+            if (Name != null) profiles = profiles.Where(x => x.Name.Contains(Name));
+            if (Surname != null) profiles = profiles.Where(x => x.Surname.Contains(Surname));
+            if (Country != null) profiles = profiles.Where(x => x.Country == Country);
+            if (City != null) profiles = profiles.Where(x => x.City == City);
+            if (profiles != null)
+            {
+                FindedUsers = new List<UserDTO>();
+                foreach (var profile in profiles)
+                {
+                    FindedUsers.Add(new UserDTO()
+                    {
+                        Name = profile.Name,
+                        AboutUrl = profile.AboutUrl,
+                        City = profile.City,
+                        Country = profile.Country,
+                        Email = profile.Email,
+                        Id = profile.UserId,
+                        ImageUrl = profile.ImageUrl,
+                        Phone = profile.Phone,
+                        Surname = profile.Surname,
+                        Roles = GetRolesByUserId(profile.UserId).Result.ToArray()
+                    });
+                }
+            }
+
             return FindedUsers;
         }
 
@@ -213,6 +217,5 @@ namespace Qwerty.BLL.Services
         {
             Database.Dispose();
         }
-
     }
 }

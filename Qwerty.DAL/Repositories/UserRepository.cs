@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Qwerty.DAL.Interfaces;
 using Qwerty.DAL.Entities;
 using Qwerty.DAL.EF;

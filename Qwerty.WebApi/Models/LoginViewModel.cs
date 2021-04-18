@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace Qwerty.WebApi.Models
+﻿namespace Qwerty.WebApi.Models
 {
     public class LoginViewModel
     {

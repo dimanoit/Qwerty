@@ -17,8 +17,8 @@ namespace Qwerty.EnvironmentSettings
     {
         public static void RegistrationServices(this IServiceCollection services, string connectionName)
         {
-            IConfigurationRoot configuration = new ConfigurationBuilder().
-                SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json").Build();
+            IConfigurationRoot configuration = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json").Build();
 
             var connectionString = configuration.GetConnectionString(connectionName);
             services.AddDbContext<ApplicationContext>(

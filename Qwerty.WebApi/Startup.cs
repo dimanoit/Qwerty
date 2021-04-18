@@ -1,16 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,10 +11,8 @@ using Qwerty.BLL.DTO;
 using Qwerty.EnvironmentSettings;
 using Qwerty.WEB.Models;
 using Qwerty.WebApi.Configurations;
-using Qwerty.WebApi.Filters;
 using Qwerty.WebApi.HubConfig;
 using Serilog;
-using Serilog.Formatting.Compact;
 
 namespace Qwerty.WebApi
 {

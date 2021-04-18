@@ -3,16 +3,10 @@ using Qwerty.BLL.DTO;
 using Qwerty.BLL.Infrastructure;
 using Qwerty.BLL.Interfaces;
 using Qwerty.WEB.Models;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Qwerty.DAL.Entities;
 using Qwerty.WebApi.Filters;
 using Serilog;
 

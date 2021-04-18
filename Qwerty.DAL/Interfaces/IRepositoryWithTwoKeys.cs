@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Qwerty.DAL.Entities;
+﻿using System.Collections.Generic;
+
 namespace Qwerty.DAL.Interfaces
 {
     public interface IRepositoryWithTwoKeys<T> where T : class

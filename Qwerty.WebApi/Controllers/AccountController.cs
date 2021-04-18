@@ -4,19 +4,16 @@ using Qwerty.WEB.Models;
 using Qwerty.BLL.Interfaces;
 using Qwerty.BLL.DTO;
 using Qwerty.BLL.Infrastructure;
-using System.Security.Claims;
 using System.Linq;
-using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
 using System.IO;
 using Qwerty.WebApi.Filters;
 using Serilog;
 
 namespace Qwerty.WEB.Controllers
 {
-    [Authorize(Roles = "user", AuthenticationSchemes = "Bearer")]
+   // [Authorize(Roles = "user", AuthenticationSchemes = "Bearer")]
     [Route("api/[controller]")]
     [ApiController]
     public class AccountController : ControllerBase
