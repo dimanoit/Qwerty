@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System;
+using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -25,6 +26,7 @@ namespace Qwerty.WebApi
 
         public IConfiguration Configuration { get; }
 
+        [Obsolete]
         public void ConfigureServices(IServiceCollection services)
         {
             services.RegistrationServices("DefaultConnection");
