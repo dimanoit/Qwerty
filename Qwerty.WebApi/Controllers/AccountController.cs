@@ -8,12 +8,13 @@ using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IO;
+using Qwerty.DAL.Identity;
 using Qwerty.WebApi.Filters;
 using Serilog;
 
 namespace Qwerty.WEB.Controllers
-{
-   // [Authorize(Roles = "user", AuthenticationSchemes = "Bearer")]
+{ 
+    [Authorize(Roles = QwertyRoles.User, AuthenticationSchemes = "Bearer")]
     [Route("api/[controller]")]
     [ApiController]
     public class AccountController : ControllerBase
@@ -35,7 +36,7 @@ namespace Qwerty.WEB.Controllers
                 UserName = model.UserName,
                 Name = model.Name,
                 Surname = model.SurName,
-                Roles = new string[] { "user" }
+                Roles = new string[] { QwertyRoles.User }
             };
             OperationDetails operationDetails = await _userService.CreateUserAsync(userDto);
             Log.Information($"User {userDto.UserName} has been registered");
