@@ -13,6 +13,7 @@ using Qwerty.EnvironmentSettings;
 using Qwerty.WEB.Models;
 using Qwerty.WebApi.Configurations;
 using Qwerty.WebApi.HubConfig;
+using Qwerty.WebApi.Middlewares;
 using Serilog;
 using Serilog.Events;
 
@@ -84,9 +85,10 @@ namespace Qwerty.WebApi
                 .WriteTo.Debug()
                 .CreateLogger();
 
+            app.UseMiddleware<ExceptionMiddleware>();
+
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
             }
             else
             {
@@ -103,7 +105,6 @@ namespace Qwerty.WebApi
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseCors("AllowLocalHost4200");
-            app.UseErrorHandlingMiddleware();
             app.UseMvc();
         }
     }
