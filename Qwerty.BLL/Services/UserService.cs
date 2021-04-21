@@ -16,6 +16,7 @@ namespace Qwerty.BLL.Services
     {
         public IUnitOfWork Database { get; set; }
 
+        //TODO create context for write and read
         private readonly ApplicationContext _appContext;
 
         public UserService(IUnitOfWork uow, ApplicationContext appContext)

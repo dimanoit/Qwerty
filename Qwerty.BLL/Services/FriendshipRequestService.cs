@@ -13,10 +13,12 @@ namespace Qwerty.BLL.Services
     public class FriendshipRequestService : IFriendshipRequestService, IDisposable
     {
         private IUnitOfWork _database;
+
         public FriendshipRequestService(IUnitOfWork uow)
         {
             _database = uow;
         }
+
         public async Task<OperationDetails> DeleteRequest(string SenderUserId, string RecipientUserId)
         {
             _database.RequestManager.Delete(RecipientUserId, SenderUserId);
@@ -28,22 +30,35 @@ namespace Qwerty.BLL.Services
         {
             FriendshipRequestDTO requestDTO = null;
             FriendshipRequest request = _database.RequestManager.Get(RecipientUserId, SenderUserId);
-            if(request != null)
-            requestDTO = Mapper.Map<FriendshipRequest, FriendshipRequestDTO>(request);
+            if (request != null)
+                requestDTO = Mapper.Map<FriendshipRequest, FriendshipRequestDTO>(request);
             return requestDTO;
         }
-        
+
         public async Task<OperationDetails> Send(FriendshipRequestDTO friendshipRequesDTO)
         {
+            var requestFromMe =
+                _database.RequestManager.Get(friendshipRequesDTO.RecipientUserId, friendshipRequesDTO.SenderUserId);
+            if (requestFromMe != null)
+            {
+                throw new ValidationException("This is request already exist", "message");
+            }
 
-            FriendshipRequest request = _database.RequestManager.Get(friendshipRequesDTO.RecipientUserId, friendshipRequesDTO.SenderUserId);
-            if (request != null) throw new ValidationException("This is request already exist", "message");
-            request = Mapper.Map<FriendshipRequestDTO, FriendshipRequest>(friendshipRequesDTO);
-            request.Status = FriendshipRequestStatus.Sent;
-            request.TimeSent = DateTime.Now;
-            _database.RequestManager.Create(request);
+            var requestToMe =
+                _database.RequestManager.Get(friendshipRequesDTO.SenderUserId, friendshipRequesDTO.RecipientUserId);
+            if (requestToMe != null)
+            {
+                throw new ValidationException("This is request already exist", "message");
+            }
+
+            var newRequest = Mapper.Map<FriendshipRequestDTO, FriendshipRequest>(friendshipRequesDTO);
+            newRequest.Status = FriendshipRequestStatus.Sent;
+            newRequest.TimeSent = DateTime.Now;
+
+            _database.RequestManager.Create(newRequest);
             await _database.SaveAsync();
-            return new OperationDetails(true, "Request sended successfully", "message");
+
+            return new OperationDetails(true, "Request sent successfully", "message");
         }
 
         public async Task<IEnumerable<FriendshipRequestDTO>> GetAllRequests(string SenderUserId)
@@ -64,6 +79,7 @@ namespace Qwerty.BLL.Services
                             requestDTO.Add(Mapper.Map<FriendshipRequest, FriendshipRequestDTO>(el));
                         }
                     }
+
                     if (SendRequest != null)
                     {
                         foreach (var el in SendRequest)
@@ -75,10 +91,10 @@ namespace Qwerty.BLL.Services
             });
             return requestDTO;
         }
+
         public void Dispose()
         {
             _database.Dispose();
         }
-
     }
 }
