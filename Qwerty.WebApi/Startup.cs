@@ -14,6 +14,7 @@ using Qwerty.WEB.Models;
 using Qwerty.WebApi.Configurations;
 using Qwerty.WebApi.HubConfig;
 using Serilog;
+using Serilog.Events;
 
 namespace Qwerty.WebApi
 {
@@ -77,9 +78,11 @@ namespace Qwerty.WebApi
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            Log.Logger = new LoggerConfiguration().ReadFrom
-              .Configuration(Configuration)
-              .CreateLogger();
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Is(LogEventLevel.Debug)
+                .Enrich.FromLogContext()
+                .WriteTo.Debug()
+                .CreateLogger();
 
             if (env.IsDevelopment())
             {

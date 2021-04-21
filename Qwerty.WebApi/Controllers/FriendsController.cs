@@ -36,25 +36,26 @@ namespace Qwerty.WEB.Controllers
         }
 
         [HttpPost]
-        [Route("{SenderId}/friend/{RecepientId}")]
-        public async Task<ActionResult> AcceptFriend(string SenderId, string userId)
+        [Route("{senderId}/friend/{recipientId}")]
+        public async Task<ActionResult> AcceptFriend(string senderId, string recipientId)
         {
-            OperationDetails operationDetails = await _friendService.AcceptFriend(SenderId, userId);
+            OperationDetails operationDetails = await _friendService.AcceptFriend(senderId, recipientId);
             if (operationDetails.Succedeed == false)
             {
-                Log.Warning($"Fail on accepting friend.Recipient {userId}.Sender {SenderId}");
+                Log.Warning($"Fail on accepting friend.Recipient {recipientId}.Sender {senderId}");
                 return BadRequest("Fail on accepting friend");
             }
 
-            OperationDetails detailsMesage = await _messageService.Send(new MessageDTO()
+            OperationDetails detailsMessage = await _messageService.Send(new MessageDTO
             {
                 DateAndTimeMessage = DateTime.Now,
-                IdSender = userId,
-                IdRecipient = SenderId,
+                IdSender = senderId,
+                IdRecipient = recipientId,
                 TextMessage = "Hi"
             });
-            Log.Information($"User {userId} accepted friend {SenderId}");
-            return Ok(detailsMesage);
+
+            Log.Information($"User {recipientId} accepted friend {senderId}");
+            return Ok(detailsMessage);
         }
     }
 }

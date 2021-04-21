@@ -21,7 +21,8 @@ namespace Qwerty.WEB.Controllers
         private IFriendService _friendService;
         private IFriendshipRequestService _friendshipRequestService;
 
-        public FriendshipRequestController(IFriendService friendService, IFriendshipRequestService friendshipRequestService, IUserService userService)
+        public FriendshipRequestController(IFriendService friendService,
+            IFriendshipRequestService friendshipRequestService, IUserService userService)
         {
             _friendService = friendService;
             _friendshipRequestService = friendshipRequestService;
@@ -29,19 +30,30 @@ namespace Qwerty.WEB.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> SendFriendshipRequest([FromBody] FriendshipRequestViewModel friendshipRequestViewModel)
+        public async Task<ActionResult> SendFriendshipRequest(
+            [FromBody] FriendshipRequestViewModel friendshipRequestViewModel)
         {
-            UserDTO recipient = await _userService.FindUserByIdAsync(friendshipRequestViewModel.RecipientUserId);
-            FriendDTO friend = _friendService.FindFriend(friendshipRequestViewModel.SenderUserId, friendshipRequestViewModel.RecipientUserId);
+            var recipient = await _userService.FindUserByIdAsync(friendshipRequestViewModel.RecipientUserId);
+
+            var friend = _friendService.FindFriend(friendshipRequestViewModel.SenderUserId, recipient.Id);
+
             if (friend != null)
             {
                 Log.Warning($"Try send friendship request, but recipient is already was friend." +
-                    $"SenderId {friendshipRequestViewModel.SenderUserId}. RecipientId {friendshipRequestViewModel.RecipientUserId}");
+                            $"SenderId {friendshipRequestViewModel.SenderUserId}. RecipientId {friendshipRequestViewModel.RecipientUserId}");
+
                 return BadRequest("User is already your friend");
             }
-            OperationDetails operationDetails = await _friendshipRequestService
-                .Send(Mapper.Map<FriendshipRequestViewModel, FriendshipRequestDTO>(friendshipRequestViewModel));
-            Log.Information($"Friendship request was send from {friendshipRequestViewModel.SenderUserId} to {friendshipRequestViewModel.RecipientUserId}");
+
+            var friendshipRequestDto =
+                Mapper.Map<FriendshipRequestViewModel, FriendshipRequestDTO>(friendshipRequestViewModel);
+
+            var operationDetails = await _friendshipRequestService
+                .Send(friendshipRequestDto);
+
+            Log.Information(
+                $"Friendship request was send from {friendshipRequestViewModel.SenderUserId} to {recipient.Id}");
+
             return Ok(operationDetails);
         }
 
@@ -55,6 +67,7 @@ namespace Qwerty.WEB.Controllers
                 Log.Warning($"User {userId} dont have friend requests");
                 return BadRequest("You have no friend requests.");
             }
+
             List<RequestProfile> requestProfiles = new List<RequestProfile>();
             foreach (var el in requests)
             {
@@ -76,6 +89,7 @@ namespace Qwerty.WEB.Controllers
                     ImageUrl = profile.ImageUrl
                 });
             }
+
             return Ok(requestProfiles);
         }
     }

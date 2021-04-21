@@ -7,6 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Qwerty.DAL.EF;
 
 namespace Qwerty.BLL.Services
 {
@@ -14,9 +16,12 @@ namespace Qwerty.BLL.Services
     {
         public IUnitOfWork Database { get; set; }
 
-        public UserService(IUnitOfWork uow)
+        private readonly ApplicationContext _appContext;
+
+        public UserService(IUnitOfWork uow, ApplicationContext appContext)
         {
             Database = uow;
+            _appContext = appContext;
         }
 
         public async Task<OperationDetails> CreateUserAsync(UserDTO userDto)
@@ -196,6 +201,60 @@ namespace Qwerty.BLL.Services
             return FindedUsers;
         }
 
+        public async Task<IEnumerable<UserDTO>> GetUsersWithoutFriends(UserSearchParametersDto searchParameters)
+        {
+            var baseQuery = _appContext.Profiles.AsQueryable();
+            if (!string.IsNullOrEmpty(searchParameters.City))
+            {
+                baseQuery = baseQuery.Where(p => p.City == searchParameters.City);
+            }
+
+            if (!string.IsNullOrEmpty(searchParameters.Country))
+            {
+                baseQuery = baseQuery.Where(p => p.Country == searchParameters.Country);
+            }
+
+            if (!string.IsNullOrEmpty(searchParameters.Name))
+            {
+                baseQuery = baseQuery.Where(p => p.Name.Contains(searchParameters.Name));
+            }
+
+            if (!string.IsNullOrEmpty(searchParameters.Surname))
+            {
+                baseQuery = baseQuery.Where(p => p.Country.Contains(searchParameters.Country));
+            }
+
+            var usersWithoutFriends = await baseQuery
+                .Where(p => p.UserId != searchParameters.CurrentUserId)
+                .Where(p =>
+                    !_appContext.UserFriends
+                        .Where(uf => uf.UserId == searchParameters.CurrentUserId)
+                        .Select(uf => uf.FriendId)
+                        .Contains(p.UserId)
+                )
+                .Where(p =>
+                    !_appContext.UserFriends
+                        .Where(uf => uf.FriendId == searchParameters.CurrentUserId)
+                        .Select(uf => uf.UserId)
+                        .Contains(p.UserId))
+                .ToListAsync();
+
+            return usersWithoutFriends?.Select(profile => new UserDTO
+            {
+                Name = profile.Name,
+                AboutUrl = profile.AboutUrl,
+                City = profile.City,
+                Country = profile.Country,
+                Email = profile.Email,
+                Id = profile.UserId,
+                ImageUrl = profile.ImageUrl,
+                Phone = profile.Phone,
+                Surname = profile.Surname,
+                Roles = GetRolesByUserId(profile.UserId).Result.ToArray()
+            });
+        }
+
+
         public async Task<OperationDetails> UploadImage(string ImageUrl, string UserName)
         {
             ApplicationUser user = await Database.UserManager.FindByNameAsync(UserName);
@@ -212,6 +271,7 @@ namespace Qwerty.BLL.Services
             ApplicationUser user = await Database.UserManager.FindByIdAsync(id);
             return await Database.UserManager.GetRolesAsync(user);
         }
+
 
         public void Dispose()
         {
