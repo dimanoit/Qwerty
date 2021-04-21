@@ -206,24 +206,25 @@ namespace Qwerty.BLL.Services
             var baseQuery = _appContext.Profiles.AsQueryable();
             if (!string.IsNullOrEmpty(searchParameters.City))
             {
-                baseQuery = baseQuery.Where(p => p.City == searchParameters.City);
+                baseQuery = baseQuery.Where(p => p.City.ToUpper() == searchParameters.City.ToUpper());
             }
 
             if (!string.IsNullOrEmpty(searchParameters.Country))
             {
-                baseQuery = baseQuery.Where(p => p.Country == searchParameters.Country);
+                baseQuery = baseQuery.Where(p => p.Country.ToUpper() == searchParameters.Country.ToUpper());
             }
 
             if (!string.IsNullOrEmpty(searchParameters.Name))
             {
-                baseQuery = baseQuery.Where(p => p.Name.Contains(searchParameters.Name));
+                baseQuery = baseQuery.Where(p => p.Name.ToUpper().Contains(searchParameters.Name.ToUpper()));
             }
 
             if (!string.IsNullOrEmpty(searchParameters.Surname))
             {
-                baseQuery = baseQuery.Where(p => p.Country.Contains(searchParameters.Country));
+                baseQuery = baseQuery.Where(p => p.Country.ToUpper().Contains(searchParameters.Country.ToUpper()));
             }
 
+            //TODO refactor little bit
             var usersWithoutFriends = await baseQuery
                 .Where(p => p.UserId != searchParameters.CurrentUserId)
                 .Where(p =>
@@ -238,7 +239,8 @@ namespace Qwerty.BLL.Services
                         .Select(uf => uf.UserId)
                         .Contains(p.UserId))
                 .ToListAsync();
-
+            
+            // TODO add automapper config
             return usersWithoutFriends?.Select(profile => new UserDTO
             {
                 Name = profile.Name,
