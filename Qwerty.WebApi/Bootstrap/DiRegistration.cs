@@ -10,8 +10,10 @@ using Qwerty.DAL.Entities;
 using Qwerty.DAL.Identity;
 using Qwerty.DAL.Interfaces;
 using Qwerty.DAL.Repositories;
+using Qwerty.WebApi.InMemoryCache;
+using Qwerty.WebApi.InMemoryCache.Interfaces;
 
-namespace Qwerty.EnvironmentSettings
+namespace Qwerty.WebApi.Bootstrap
 {
     public static class DiRegistration
     {
@@ -34,6 +36,7 @@ namespace Qwerty.EnvironmentSettings
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ICacheManager, CacheManager>();
+            services.AddScoped<IUserConnectionsManager, UserConnectionsManager>();
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationContext>()

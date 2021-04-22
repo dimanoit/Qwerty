@@ -98,7 +98,7 @@ namespace Qwerty.WebApi
 
             app.UseSignalR(routes =>
             {
-                routes.MapHub<MessageHub>("/message");
+                routes.MapHub<NotificationHub>("/notification-message");
             });
 
             app.UseAuthentication();

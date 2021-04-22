@@ -12,6 +12,7 @@ using Qwerty.WebApi.Filters;
 using Serilog;
 using Microsoft.AspNetCore.SignalR;
 using Qwerty.WebApi.HubConfig;
+using Qwerty.WebApi.InMemoryCache.Interfaces;
 
 namespace Qwerty.WEB.Controllers
 {
@@ -20,15 +21,21 @@ namespace Qwerty.WEB.Controllers
     [ApiController]
     public class MessageController : ControllerBase
     {
-        private IUserService _userService;
-        private IMessageService _messageService;
-        private IHubContext<MessageHub> _hub;
+        private readonly IUserService _userService;
+        private readonly IMessageService _messageService;
+        private readonly IUserConnectionsManager _userConnectionsManager;
+        private readonly IHubContext<NotificationHub> _hub;
 
-        public MessageController(IMessageService messageService, IUserService userService, IHubContext<MessageHub> hub)
+        public MessageController(
+            IMessageService messageService,
+            IUserService userService,
+            IHubContext<NotificationHub> hub,
+            IUserConnectionsManager userConnectionsManager)
         {
             _messageService = messageService;
             _userService = userService;
             _hub = hub;
+            _userConnectionsManager = userConnectionsManager;
         }
 
         [HttpDelete]
@@ -75,6 +82,7 @@ namespace Qwerty.WEB.Controllers
                     Surname = MessageUser.Surname
                 });
             }
+
             return Ok(dialogs);
         }
 
@@ -82,11 +90,20 @@ namespace Qwerty.WEB.Controllers
         [ModelValidationFilter]
         public async Task<ActionResult> SendMessage([FromBody] MessageViewModel message)
         {
-            MessageDTO messageDTO = Mapper.Map<MessageViewModel, MessageDTO>(message);
+            var messageDTO = Mapper.Map<MessageViewModel, MessageDTO>(message);
             messageDTO.DateAndTimeMessage = DateTime.Now;
             messageDTO.IdSender = message.IdSender;
-            OperationDetails details = await _messageService.Send(messageDTO);
-            await _hub.Clients.All.SendAsync("sendMessage", messageDTO);
+
+            var details = await _messageService.Send(messageDTO);
+
+            if (details.Succedeed)
+            {
+                var recipientConnectionId = _userConnectionsManager.GetUserConnectionId(message.IdRecipient);
+                
+                await _hub.Clients.Client(recipientConnectionId)
+                    .SendAsync(NotificationHubMethods.SendNotification, messageDTO);
+            }
+
             Log.Information($"Message was send from {message.IdSender} to {message.IdRecipient}");
             return Ok(details);
         }
