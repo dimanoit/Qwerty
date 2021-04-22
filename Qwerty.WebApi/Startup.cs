@@ -66,7 +66,7 @@ namespace Qwerty.WebApi
 
             services.Configure<MvcOptions>(options =>
             {
-                options.Filters.Add(new CorsAuthorizationFilterFactory("AllowLocalHost4200"));
+                options.Filters.Add(new CorsAuthorizationFilterFactory("MyPolicy"));
                 //options.Filters.Add(new ModelValidationFilter());
             });
 
@@ -82,9 +82,11 @@ namespace Qwerty.WebApi
                 .MinimumLevel.Is(LogEventLevel.Debug)
                 .Enrich.FromLogContext()
                 .WriteTo.Debug()
+                .WriteTo.Console()
                 .CreateLogger();
 
             app.UseMiddleware<ExceptionMiddleware>();
+            app.UseCors("MyPolicy");
 
             if (env.IsDevelopment())
             {
@@ -103,7 +105,6 @@ namespace Qwerty.WebApi
             app.UseHttpsRedirection();
             app.UseDefaultFiles();
             app.UseStaticFiles();
-            app.UseCors("MyPolicy");
             app.UseMvc();
         }
     }
