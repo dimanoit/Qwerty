@@ -56,13 +56,12 @@ namespace Qwerty.WebApi
                     };
                 });
 
-            services.AddCors(options =>
+            services.AddCors(o => o.AddPolicy("MyPolicy", builder =>
             {
-                options.AddPolicy("AllowLocalHost4200", builder => builder.WithOrigins("http://localhost:4200")
-                    .AllowAnyHeader()
+                builder.AllowAnyOrigin()
                     .AllowAnyMethod()
-                    .AllowCredentials());
-            });
+                    .AllowAnyHeader();
+            }));
             services.AddSignalR();
 
             services.Configure<MvcOptions>(options =>
@@ -104,7 +103,7 @@ namespace Qwerty.WebApi
             app.UseHttpsRedirection();
             app.UseDefaultFiles();
             app.UseStaticFiles();
-            app.UseCors("AllowLocalHost4200");
+            app.UseCors("MyPolicy");
             app.UseMvc();
         }
     }
