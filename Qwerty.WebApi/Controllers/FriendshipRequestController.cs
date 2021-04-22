@@ -36,13 +36,15 @@ namespace Qwerty.WEB.Controllers
             var recipient = await _userService.FindUserByIdAsync(friendshipRequestViewModel.RecipientUserId);
 
             var friend = _friendService.FindFriend(friendshipRequestViewModel.SenderUserId, recipient.Id);
-
             if (friend != null)
             {
-                Log.Warning($"Try send friendship request, but recipient is already was friend." +
-                            $"SenderId {friendshipRequestViewModel.SenderUserId}. RecipientId {friendshipRequestViewModel.RecipientUserId}");
-
-                return BadRequest("User is already your friend");
+                return BadRequest("User is already your friend"); 
+            }
+            
+            var iAsFriend = await _userService.FindUserByIdAsync(friendshipRequestViewModel.SenderUserId);
+            if (iAsFriend != null)
+            {
+                return BadRequest("User is already your friend"); 
             }
 
             var friendshipRequestDto =

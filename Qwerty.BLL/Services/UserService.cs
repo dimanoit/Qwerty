@@ -27,14 +27,25 @@ namespace Qwerty.BLL.Services
 
         public async Task<OperationDetails> CreateUserAsync(UserDTO userDto)
         {
-            if (userDto == null) throw new ValidationException("UserDTO was null", "");
+            if (userDto == null)
+            {
+                throw new ValidationException("UserDTO was null", "");
+            }
+
             ApplicationUser user = await Database.UserManager.FindByNameAsync(userDto.UserName);
-            if (user != null) throw new ValidationException("User with this login already exists", userDto.UserName);
+            if (user != null)
+            {
+                throw new ValidationException("User with this login already exists", userDto.UserName);
+            }
+
             user = new ApplicationUser {UserName = userDto.UserName};
             var result = await Database.UserManager.CreateAsync(user, userDto.Password);
-            if (result.Errors.Count() > 0)
+            if (result.Errors.Any())
+            {
                 return new OperationDetails(false, String.Join(",", result.Errors.Select(x => x.Description)), null);
-            if (userDto.Roles.Count() > 0)
+            }
+
+            if (userDto.Roles.Any())
             {
                 foreach (var role in userDto.Roles)
                 {
@@ -42,13 +53,27 @@ namespace Qwerty.BLL.Services
                 }
             }
 
-            User Quser = new User()
-                {ApplicationUser = user, Login = user.UserName, Password = userDto.Password, UserId = user.Id};
+            User Quser = new User
+            {
+                ApplicationUser = user,
+                Login = user.UserName,
+                Password = userDto.Password,
+                UserId = user.Id
+            };
+
             UserProfile profile = new UserProfile()
-                {UserId = Quser.UserId, User = Quser, Name = userDto.Name, Surname = userDto.Surname};
+            {
+                UserId = Quser.UserId,
+                User = Quser,
+                Name = userDto.Name,
+                Surname = userDto.Surname
+            };
+            
             Database.ProfileManager.Create(profile);
             Database.QUserManager.Create(Quser);
+            
             await Database.SaveAsync();
+            
             return new OperationDetails(true, "Registration successful", "user");
         }
 
@@ -240,7 +265,7 @@ namespace Qwerty.BLL.Services
                         .Select(uf => uf.UserId)
                         .Contains(p.UserId))
                 .ToListAsync();
-            
+
             // TODO add automapper config
             return usersWithoutFriends?.Select(profile => new UserDTO
             {
