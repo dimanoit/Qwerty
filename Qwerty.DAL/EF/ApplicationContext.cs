@@ -9,7 +9,7 @@ namespace Qwerty.DAL.EF
         public ApplicationContext(DbContextOptions<ApplicationContext> options)
             : base(options)
         {
-            Database.Migrate();
+            Database.EnsureCreated();
         }
 
         public DbSet<User> QUsers { get; set; }
