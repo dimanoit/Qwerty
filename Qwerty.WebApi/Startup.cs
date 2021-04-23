@@ -3,14 +3,12 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Qwerty.BLL.DTO;
-using Qwerty.EnvironmentSettings;
 using Qwerty.WEB.Models;
+using Qwerty.WebApi.Bootstrap;
 using Qwerty.WebApi.Configurations;
 using Qwerty.WebApi.HubConfig;
 using Qwerty.WebApi.Middlewares;
@@ -32,7 +30,10 @@ namespace Qwerty.WebApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.RegistrationServices("DefaultConnection");
-
+            
+            services.AddSignalR();
+            services.AddMemoryCache();
+            
             Mapper.Initialize(cfg =>
             {
                 cfg.AddProfile<MapperSetting>();
@@ -58,20 +59,14 @@ namespace Qwerty.WebApi
 
             services.AddCors(o => o.AddPolicy("MyPolicy", builder =>
             {
-                builder.AllowAnyOrigin()
+                builder.WithOrigins("http://localhost:4200")
                     .AllowAnyMethod()
-                    .AllowAnyHeader();
+                    .AllowAnyHeader()
+                    .AllowCredentials();
             }));
-            services.AddSignalR();
+          
 
-            services.Configure<MvcOptions>(options =>
-            {
-                options.Filters.Add(new CorsAuthorizationFilterFactory("MyPolicy"));
-                //options.Filters.Add(new ModelValidationFilter());
-            });
-
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-
+            services.AddControllers();
         }
 
 
@@ -105,7 +100,7 @@ namespace Qwerty.WebApi
             app.UseHttpsRedirection();
             app.UseDefaultFiles();
             app.UseStaticFiles();
-            app.UseMvc();
+            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
         }
     }
 }
