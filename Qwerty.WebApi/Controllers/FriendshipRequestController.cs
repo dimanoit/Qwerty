@@ -41,7 +41,7 @@ namespace Qwerty.WEB.Controllers
                 return BadRequest("User is already your friend"); 
             }
             
-            var iAsFriend = await _userService.FindUserByIdAsync(friendshipRequestViewModel.SenderUserId);
+            var iAsFriend = _friendService.FindFriend(recipient.Id, friendshipRequestViewModel.SenderUserId);
             if (iAsFriend != null)
             {
                 return BadRequest("User is already your friend"); 
