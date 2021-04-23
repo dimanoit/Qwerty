@@ -83,14 +83,6 @@ namespace Qwerty.WebApi
             app.UseMiddleware<ExceptionMiddleware>();
             app.UseCors("MyPolicy");
 
-            if (env.IsDevelopment())
-            {
-            }
-            else
-            {
-                app.UseHsts();
-            }
-
             app.UseSignalR(routes =>
             {
                 routes.MapHub<NotificationHub>("/notification-message");
