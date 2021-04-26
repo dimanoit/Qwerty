@@ -65,7 +65,7 @@ namespace BLL.Tests
         {
             //Arrange
             var expectedUserId = "1";
-            var friendService = new FriendService(_friendServiceFixture.UnitOfWork);
+            var friendService = new FriendService(_friendServiceFixture.UnitOfWork, _friendServiceFixture.ApplicationContext);
 
             //Act
             var actualUserId = friendService
