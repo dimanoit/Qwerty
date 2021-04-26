@@ -1,42 +1,34 @@
-﻿using Qwerty.BLL.Infrastructure;
-using Qwerty.BLL.Interfaces;
-using Qwerty.DAL.Interfaces;
-using System;
+﻿using Qwerty.BLL.Interfaces;
 using System.Threading.Tasks;
-using Qwerty.DAL.Entities;
+using Microsoft.EntityFrameworkCore;
+using Qwerty.DAL.EF;
+using Qwerty.DAL.Identity;
 
 namespace Qwerty.BLL.Services
 {
-    public class AdminService : IAdminService, IDisposable
+    public class AdminService : IAdminService
     {
-        private IUnitOfWork _database;
+        private readonly ApplicationUserManager _userManager;
+        private readonly ApplicationContext _applicationContext;
 
-        public AdminService(IUnitOfWork uow)
+        public AdminService(ApplicationUserManager userManager, ApplicationContext applicationContext)
         {
-            _database = uow;
+            _userManager = userManager;
+            _applicationContext = applicationContext;
         }
+        
+        public async Task BlockUserAsync(string userId) =>
+            await AddDeleteRole(userId, QwertyRoles.Blocked, QwertyRoles.User);
+        public async Task UnblockUserAsync(string userId) =>
+            await AddDeleteRole(userId, QwertyRoles.User, QwertyRoles.Blocked);
 
-        public async Task BlockUserAsync(string UserId)
+        private async Task AddDeleteRole(string userId, string roleForDelete, string roleForAdd)
         {
-            if (UserId == null || UserId == "") throw new ValidationException("Incorrect user id", UserId);
-            User user = _database.QUserManager.Get(UserId);
-            if (user == null) throw new ValidationException("User with this id not exists", UserId);
-            await _database.UserManager.AddToRoleAsync(user.ApplicationUser, "blocked");
-            await _database.UserManager.RemoveFromRoleAsync(user.ApplicationUser, "user");
-        }
+            var user = await _applicationContext.Users
+                .FirstAsync(u => u.Id == userId);
 
-        public async Task UnblockUserAsync(string UserId)
-        {
-            if (UserId == null || UserId == "") throw new ValidationException("Incorrect user id", UserId);
-            User user = _database.QUserManager.Get(UserId);
-            if (user == null) throw new ValidationException("User with this id not exists", UserId);
-            await _database.UserManager.RemoveFromRoleAsync(user.ApplicationUser, "blocked");
-            await _database.UserManager.AddToRoleAsync(user.ApplicationUser, "user");
-        }
-
-        public void Dispose()
-        {
-            _database.Dispose();
+            await _userManager.AddToRoleAsync(user, roleForAdd);
+            await _userManager.RemoveFromRoleAsync(user, roleForDelete);
         }
     }
 }
