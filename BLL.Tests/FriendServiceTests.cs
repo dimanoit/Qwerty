@@ -22,41 +22,6 @@ namespace BLL.Tests
             _friendServiceFixture = friendServiceFixture;
         }
 
-        [Fact]
-        public async Task Create_AddNewFriend_ShouldBeAddedFriend()
-        {
-            //Arrange
-            var friendDto = new FriendDTO {FriendId = Arg.Any<string>()};
-
-            //Act
-            await _friendServiceFixture.FriendService.Create(friendDto);
-
-            //Assert
-            await _friendServiceFixture.UnitOfWork
-                .Received()
-                .SaveAsync();
-        }
-
-        [Fact]
-        public async Task Create_AddExistingFriend_ShouldBeThrownValidationException()
-        {
-            //Act
-            Func<Task> act = async () =>
-                await _friendServiceFixture.FriendService.Create(Arg.Any<FriendDTO>());
-
-            //Assert
-            await act.Should().ThrowAsync<ValidationException>();
-        }
-
-        [Fact]
-        public async Task Delete_ExistingFriend_ShouldBeDeletedFriend()
-        {
-            //Act
-            await _friendServiceFixture.FriendService.DeleteFriend(string.Empty, string.Empty);
-
-            //Assert
-            await _friendServiceFixture.UnitOfWork.Received().SaveAsync();
-        }
 
         public void FindFriends_FindingExist_ReturnedFriendship()
         {
