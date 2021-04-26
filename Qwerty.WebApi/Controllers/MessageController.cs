@@ -99,9 +99,12 @@ namespace Qwerty.WEB.Controllers
             if (details.Succedeed)
             {
                 var recipientConnectionId = _userConnectionsManager.GetUserConnectionId(message.IdRecipient);
-                
-                await _hub.Clients.Client(recipientConnectionId)
-                    .SendAsync(NotificationHubMethods.SendNotification, messageDTO);
+
+                if (!string.IsNullOrEmpty(recipientConnectionId))
+                {
+                    await _hub.Clients.Client(recipientConnectionId)
+                        .SendAsync(NotificationHubMethods.SendNotification, messageDTO);
+                }
             }
 
             Log.Information($"Message was send from {message.IdSender} to {message.IdRecipient}");
