@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Qwerty.WEB.Models;
 using Qwerty.BLL.Interfaces;
 using Qwerty.BLL.DTO;
-using Qwerty.BLL.Infrastructure;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IO;
-using System.Security.Claims;
 using Qwerty.DAL.Identity;
 using Qwerty.WebApi.Filters;
 using Serilog;

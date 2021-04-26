@@ -1,13 +1,10 @@
 ﻿using Qwerty.BLL.DTO;
-using Qwerty.BLL.Infrastructure;
 using Qwerty.BLL.Interfaces;
-using System;
 using System.Collections.Generic;
 using Qwerty.WebApi.Filters;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Serilog;
 
 namespace Qwerty.WEB.Controllers
 {

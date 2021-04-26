@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Qwerty.BLL.DTO;
-using Qwerty.BLL.Infrastructure;
 using Qwerty.BLL.Interfaces;
 using Qwerty.WEB.Models;
 using System.Collections.Generic;
@@ -35,14 +34,10 @@ namespace Qwerty.WEB.Controllers
         {
             var recipient = await _userService.FindUserByIdAsync(friendshipRequestViewModel.RecipientUserId);
 
-            var friend = _friendService.FindFriend(friendshipRequestViewModel.SenderUserId, recipient.Id);
-            if (friend != null)
-            {
-                return BadRequest("User is already your friend");
-            }
+            var friendship = await _friendService.GetFriendship(friendshipRequestViewModel.RecipientUserId,
+                friendshipRequestViewModel.SenderUserId);
 
-            var iAsFriend = _friendService.FindFriend(recipient.Id, friendshipRequestViewModel.SenderUserId);
-            if (iAsFriend != null)
+            if (friendship != null)
             {
                 return BadRequest("User is already your friend");
             }

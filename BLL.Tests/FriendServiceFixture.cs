@@ -1,5 +1,4 @@
 ﻿using System;
-using AutoMapper;
 using NSubstitute;
 using Qwerty.BLL.Services;
 using Qwerty.DAL.EF;

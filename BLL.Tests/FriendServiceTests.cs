@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Threading.Tasks;
-using AutoMapper;
 using FluentAssertions;
 using NSubstitute;
-using Qwerty.BLL.DTO;
-using Qwerty.BLL.Infrastructure;
 using Qwerty.BLL.Services;
 using Qwerty.DAL.Entities;
-using Qwerty.DAL.Interfaces;
 using Xunit;
 
 namespace BLL.Tests

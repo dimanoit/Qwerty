@@ -3,8 +3,6 @@ using Qwerty.BLL.DTO;
 using Qwerty.BLL.Infrastructure;
 using Qwerty.BLL.Interfaces;
 using Qwerty.DAL.Entities;
-using Qwerty.DAL.Interfaces;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,37 +11,31 @@ using Qwerty.DAL.EF;
 
 namespace Qwerty.BLL.Services
 {
-    public class FriendService : IFriendService, IDisposable
+    public class FriendService : IFriendService
     {
-        private IUnitOfWork _database;
         private readonly ApplicationContext _appContext;
 
-        public FriendService(IUnitOfWork uow, ApplicationContext appContext)
+        public FriendService(ApplicationContext appContext)
         {
-            _database = uow;
             _appContext = appContext;
         }
 
-        public async Task DeleteFriend(string ThisUserId, string UserFriendId)
+        public async Task DeleteFriend(string firstUserId, string secondUserId)
         {
-            Friend friend = _database.FriendManager.Get(ThisUserId);
-            if (friend == null) throw new ValidationException("Friend with given id does not exist.", ThisUserId);
-            UserFriends ThisFriendship = _database.UserFriendsManager.Get(ThisUserId, UserFriendId);
-            if (ThisFriendship == null) throw new ValidationException("ThisFriendship not exist", "UserFriends");
-            _database.UserFriendsManager.Delete(ThisUserId, UserFriendId);
-            await _database.SaveAsync();
+            var friendship = await GetFriendship(firstUserId, secondUserId);
+            
+            if (friendship != null)
+            {
+                _appContext.UserFriends.Remove(friendship);
+            }
+
+            await _appContext.SaveChangesAsync();
         }
 
         public async Task AcceptFriend(string senderId, string recipientId)
         {
-            var myFriend = FindFriend(senderId, recipientId);
-            if (myFriend != null)
-            {
-                throw new ValidationException("This user already your friend", recipientId);
-            }
-
-            var iAsFriend = FindFriend(recipientId, senderId);
-            if (iAsFriend != null)
+            var friendShip = await GetFriendship(senderId, recipientId);
+            if (friendShip != null)
             {
                 throw new ValidationException("This user already your friend", recipientId);
             }
@@ -57,18 +49,23 @@ namespace Qwerty.BLL.Services
                 UserId = senderId,
                 FriendId = recipientId
             };
-            
-            _database.UserFriendsManager.Create(friends);
-            
-            _database.RequestManager.Delete(recipientId, senderId);
-            
-            await _database.SaveAsync();
+
+            _appContext.UserFriends.Add(friends);
+
+            var requestForRemove = await _appContext.Requests
+                .FirstAsync(r => r.SenderUserId == senderId && r.RecipientUserId == recipientId);
+
+            _appContext.Requests.Remove(requestForRemove);
+
+            await _appContext.SaveChangesAsync();
         }
 
-        public FriendDTO FindFriend(string ThisUserId, string UserFriendId)
+        public async Task<UserFriends> GetFriendship(string firstUserId, string secondUserId)
         {
-            Friend friend = _database.UserFriendsManager.Get(UserFriendId, ThisUserId)?.Friend;
-            return friend != null ? Mapper.Map<Friend, FriendDTO>(friend) : null;
+            return await _appContext.UserFriends.FirstOrDefaultAsync(uf =>
+                (uf.FriendId == firstUserId && uf.UserId == secondUserId) ||
+                (uf.FriendId == secondUserId && uf.UserId == firstUserId)
+            );
         }
 
         public async Task<IEnumerable<UserDTO>> GetFriendsProfiles(string userId)
@@ -94,11 +91,6 @@ namespace Qwerty.BLL.Services
             }).ToListAsync();
         }
 
-        public void Dispose()
-        {
-            _database.Dispose();
-        }
-        
         private async Task CreateFriendAccountIfNotExist(FriendDTO friendDto)
         {
             if (friendDto == null)
@@ -112,7 +104,8 @@ namespace Qwerty.BLL.Services
                 return;
             }
 
-            _database.FriendManager.Create(Mapper.Map<FriendDTO, Friend>(friendDto));
+            var newFriend = Mapper.Map<FriendDTO, Friend>(friendDto);
+            _appContext.Friends.Add(newFriend);
         }
     }
 }
