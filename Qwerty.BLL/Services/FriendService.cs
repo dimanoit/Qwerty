@@ -24,21 +24,7 @@ namespace Qwerty.BLL.Services
             _appContext = appContext;
         }
 
-        public async Task<OperationDetails> Create(FriendDTO friendDto)
-        {
-            if (friendDto == null) throw new ValidationException("friendDto was null", "");
-            Friend friend = _database.FriendManager.Get(friendDto.FriendId);
-            if (friend != null)
-                throw new ValidationException("The person already has an account as a friend.", friendDto.FriendId);
-            User user = _database.QUserManager.Get(friendDto.FriendId);
-            if (user == null)
-                throw new ValidationException("The person already has an account as a friend.", friendDto.FriendId);
-            _database.FriendManager.Create(Mapper.Map<FriendDTO, Friend>(friendDto));
-            await _database.SaveAsync();
-            return new OperationDetails(true, "Friend created successfully", "friend");
-        }
-
-        public async Task<OperationDetails> DeleteFriend(string ThisUserId, string UserFriendId)
+        public async Task DeleteFriend(string ThisUserId, string UserFriendId)
         {
             Friend friend = _database.FriendManager.Get(ThisUserId);
             if (friend == null) throw new ValidationException("Friend with given id does not exist.", ThisUserId);
@@ -46,34 +32,66 @@ namespace Qwerty.BLL.Services
             if (ThisFriendship == null) throw new ValidationException("ThisFriendship not exist", "UserFriends");
             _database.UserFriendsManager.Delete(ThisUserId, UserFriendId);
             await _database.SaveAsync();
-            return new OperationDetails(true, "This Friendship was deleted", "UserFriends");
         }
 
-        public async Task<OperationDetails> AcceptFriend(string SenderId, string RecipientId)
+        public async Task AcceptFriend(string senderId, string recipientId)
         {
-            FriendDTO friend = FindFriend(SenderId, RecipientId);
-            if (friend != null) throw new ValidationException("This user already your friend", RecipientId);
+            var myFriend = FindFriend(senderId, recipientId);
+            if (myFriend != null)
+            {
+                throw new ValidationException("This user already your friend", recipientId);
+            }
+
+            var iAsFriend = FindFriend(recipientId, senderId);
+            if (iAsFriend != null)
+            {
+                throw new ValidationException("This user already your friend", recipientId);
+            }
+
             try
             {
-                await Create(new FriendDTO {FriendId = RecipientId});
-                await Create(new FriendDTO {FriendId = SenderId});
+                await Create(new FriendDTO { FriendId = recipientId });
+                await Create(new FriendDTO { FriendId = senderId });
             }
             catch (ValidationException ex)
             {
                 if (ex.Message == "The person already has an account as a friend.")
                 {
-                    _database.UserFriendsManager.Create(new UserFriends() {UserId = SenderId, FriendId = RecipientId});
-                    _database.RequestManager.Delete(RecipientId, SenderId);
+                    _database.UserFriendsManager.Create(new UserFriends() { UserId = senderId, FriendId = recipientId });
+                    _database.RequestManager.Delete(recipientId, senderId);
                     await _database.SaveAsync();
-                    return new OperationDetails(true, "Friends adedd", "friend");
                 }
                 else throw new ValidationException(ex.Message, ex.Property);
             }
 
-            _database.UserFriendsManager.Create(new UserFriends() {UserId = SenderId, FriendId = RecipientId});
-            _database.RequestManager.Delete(RecipientId, SenderId);
+            _database.UserFriendsManager.Create(new UserFriends() { UserId = senderId, FriendId = recipientId });
+            _database.RequestManager.Delete(recipientId, senderId);
             await _database.SaveAsync();
-            return new OperationDetails(true, "Friends adedd", "friend");
+        }
+
+        public async Task Create(FriendDTO friendDto)
+        {
+            if (friendDto == null)
+            {
+                throw new ValidationException("friendDto was null", "");
+            }
+
+            var friend = _database.FriendManager.Get(friendDto.FriendId);
+            if (friend != null)
+            {
+                throw new ValidationException("The person already has an account as a friend.", friendDto.FriendId);
+            }
+
+            var user = _database.QUserManager.Get(friendDto.FriendId);
+            if (user == null)
+            {
+                throw new ValidationException("The person already has an account as a friend.", friendDto.FriendId);
+            }
+
+            _database.FriendManager.Create(Mapper.Map<FriendDTO, Friend>(friendDto));
+
+            await _database.SaveAsync();
+
         }
 
         public FriendDTO FindFriend(string ThisUserId, string UserFriendId)
@@ -85,9 +103,9 @@ namespace Qwerty.BLL.Services
         public async Task<IEnumerable<UserDTO>> GetFriendsProfiles(string userId)
         {
             var friends = from p in _appContext.Profiles
-                join uf in _appContext.UserFriends
-                    on p.UserId equals uf.FriendId == userId ? uf.UserId : uf.UserId == userId ? uf.FriendId : null
-                select p;
+                          join uf in _appContext.UserFriends
+                              on p.UserId equals uf.FriendId == userId ? uf.UserId : uf.UserId == userId ? uf.FriendId : null
+                          select p;
 
             // TODO create autoMapper mapping for this entities
             return await friends.Select(f => new UserDTO

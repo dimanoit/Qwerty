@@ -48,18 +48,16 @@ namespace Qwerty.WEB.Controllers
         [Route("block/{UserId}")]
         public async Task<ActionResult> BlockUser(string userId)
         {
-            var operationDetails = await _adminService.BlockUserAsync(userId);
-            Log.Information($"User {userId} was blocked");
-            return Ok(operationDetails);
+            await _adminService.BlockUserAsync(userId);
+            return Ok();
         }
 
         [HttpPut]
         [Route("unblock/{UserId}")]
         public async Task<ActionResult> UnblockUser(string userId)
         {
-            OperationDetails operationDetails = await _adminService.UnblockUserAsync(userId);
-            Log.Information($"User {userId} was unblocked");
-            return Ok(operationDetails);
+            await _adminService.UnblockUserAsync(userId);
+            return Ok();
         }
 
         [HttpGet]

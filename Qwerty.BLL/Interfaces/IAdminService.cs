@@ -5,8 +5,8 @@ namespace Qwerty.BLL.Interfaces
 {
     public interface IAdminService
     {
-        Task<OperationDetails> BlockUserAsync(string UserId);
-        Task<OperationDetails> UnblockUserAsync(string UserId);
+        Task BlockUserAsync(string userId);
+        Task UnblockUserAsync(string userId);
 
     }
 }

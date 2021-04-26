@@ -29,21 +29,19 @@ namespace BLL.Tests
             var friendDto = new FriendDTO {FriendId = Arg.Any<string>()};
 
             //Act
-            var actual = await _friendServiceFixture.FriendService.Create(friendDto);
+            await _friendServiceFixture.FriendService.Create(friendDto);
 
             //Assert
             await _friendServiceFixture.UnitOfWork
                 .Received()
                 .SaveAsync();
-
-            actual.Succedeed.Should().BeTrue();
         }
 
         [Fact]
         public async Task Create_AddExistingFriend_ShouldBeThrownValidationException()
         {
             //Act
-            Func<Task<OperationDetails>> act = async () =>
+            Func<Task> act = async () =>
                 await _friendServiceFixture.FriendService.Create(Arg.Any<FriendDTO>());
 
             //Assert
@@ -54,18 +52,18 @@ namespace BLL.Tests
         public async Task Delete_ExistingFriend_ShouldBeDeletedFriend()
         {
             //Act
-            var deleteResult = await _friendServiceFixture.FriendService.DeleteFriend(string.Empty, string.Empty);
+            await _friendServiceFixture.FriendService.DeleteFriend(string.Empty, string.Empty);
 
             //Assert
             await _friendServiceFixture.UnitOfWork.Received().SaveAsync();
-            deleteResult.Succedeed.Should().BeTrue();
         }
 
         public void FindFriends_FindingExist_ReturnedFriendship()
         {
             //Arrange
             var expectedUserId = "1";
-            var friendService = new FriendService(_friendServiceFixture.UnitOfWork, _friendServiceFixture.ApplicationContext);
+            var friendService =
+                new FriendService(_friendServiceFixture.UnitOfWork, _friendServiceFixture.ApplicationContext);
 
             //Act
             var actualUserId = friendService

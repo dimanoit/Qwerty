@@ -42,10 +42,8 @@ namespace Qwerty.WEB.Controllers
         [Route("{messageId}")]
         public async Task<ActionResult> DeleteMessage(int messageId)
         {
-            OperationDetails details = await _messageService.DeleteMessage(messageId);
-            await _hub.Clients.All.SendAsync("deleteMessage", messageId);
-            Log.Information($"Message {messageId} was deleted");
-            return Ok(Newtonsoft.Json.JsonConvert.SerializeObject(details.Message));
+            await _messageService.DeleteMessage(messageId);
+            return Ok();
         }
 
         [Route("{userId}/dialogs")]
@@ -94,21 +92,18 @@ namespace Qwerty.WEB.Controllers
             messageDTO.DateAndTimeMessage = DateTime.Now;
             messageDTO.IdSender = message.IdSender;
 
-            var details = await _messageService.Send(messageDTO);
+            await _messageService.Send(messageDTO);
 
-            if (details.Succedeed)
+
+            var recipientConnectionId = _userConnectionsManager.GetUserConnectionId(message.IdRecipient);
+
+            if (!string.IsNullOrEmpty(recipientConnectionId))
             {
-                var recipientConnectionId = _userConnectionsManager.GetUserConnectionId(message.IdRecipient);
-
-                if (!string.IsNullOrEmpty(recipientConnectionId))
-                {
-                    await _hub.Clients.Client(recipientConnectionId)
-                        .SendAsync(NotificationHubMethods.SendNotification, messageDTO);
-                }
+                await _hub.Clients.Client(recipientConnectionId)
+                    .SendAsync(NotificationHubMethods.SendNotification, messageDTO);
             }
 
-            Log.Information($"Message was send from {message.IdSender} to {message.IdRecipient}");
-            return Ok(details);
+            return Ok();
         }
 
         [Route("{userId}/messages/{senderId}")]

@@ -38,25 +38,23 @@ namespace Qwerty.WEB.Controllers
             var friend = _friendService.FindFriend(friendshipRequestViewModel.SenderUserId, recipient.Id);
             if (friend != null)
             {
-                return BadRequest("User is already your friend"); 
+                return BadRequest("User is already your friend");
             }
-            
+
             var iAsFriend = _friendService.FindFriend(recipient.Id, friendshipRequestViewModel.SenderUserId);
             if (iAsFriend != null)
             {
-                return BadRequest("User is already your friend"); 
+                return BadRequest("User is already your friend");
             }
 
             var friendshipRequestDto =
                 Mapper.Map<FriendshipRequestViewModel, FriendshipRequestDTO>(friendshipRequestViewModel);
 
-            var operationDetails = await _friendshipRequestService
+            await _friendshipRequestService
                 .Send(friendshipRequestDto);
 
-            Log.Information(
-                $"Friendship request was send from {friendshipRequestViewModel.SenderUserId} to {recipient.Id}");
 
-            return Ok(operationDetails);
+            return Ok();
         }
 
         [HttpGet]

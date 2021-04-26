@@ -25,7 +25,7 @@ namespace Qwerty.BLL.Services
             _appContext = appContext;
         }
 
-        public async Task<OperationDetails> CreateUserAsync(UserDTO userDto)
+        public async Task CreateUserAsync(UserDTO userDto)
         {
             if (userDto == null)
             {
@@ -38,11 +38,10 @@ namespace Qwerty.BLL.Services
                 throw new ValidationException("User with this login already exists", userDto.UserName);
             }
 
-            user = new ApplicationUser {UserName = userDto.UserName};
+            user = new ApplicationUser { UserName = userDto.UserName };
             var result = await Database.UserManager.CreateAsync(user, userDto.Password);
             if (result.Errors.Any())
             {
-                return new OperationDetails(false, String.Join(",", result.Errors.Select(x => x.Description)), null);
             }
 
             if (userDto.Roles.Any())
@@ -68,13 +67,12 @@ namespace Qwerty.BLL.Services
                 Name = userDto.Name,
                 Surname = userDto.Surname
             };
-            
+
             Database.ProfileManager.Create(profile);
             Database.QUserManager.Create(Quser);
-            
+
             await Database.SaveAsync();
-            
-            return new OperationDetails(true, "Registration successful", "user");
+
         }
 
         public async Task<UserDTO> FindUserAsync(string userName, string password)
@@ -145,7 +143,7 @@ namespace Qwerty.BLL.Services
             };
         }
 
-        public async Task<OperationDetails> DeleteUser(string userId)
+        public async Task DeleteUser(string userId)
         {
             ApplicationUser user = await Database.UserManager.FindByIdAsync(userId);
             if (user == null) throw new ValidationException("User not found", "");
@@ -157,10 +155,9 @@ namespace Qwerty.BLL.Services
             else throw new ValidationException("User already delted", "");
 
             await Database.SaveAsync();
-            return new OperationDetails(true, "Successfully deleted", userId);
         }
 
-        public async Task<OperationDetails> RestoreAccount(string userId)
+        public async Task RestoreAccount(string userId)
         {
             ApplicationUser user = await Database.UserManager.FindByIdAsync(userId);
             if (user == null) throw new ValidationException("User not found", "");
@@ -172,11 +169,10 @@ namespace Qwerty.BLL.Services
             else throw new ValidationException("User not delted", "");
 
             await Database.SaveAsync();
-            return new OperationDetails(true, "Successfully restore", userId);
         }
 
 
-        public async Task<OperationDetails> ChangeProfileInformation(UserDTO userDTO)
+        public async Task ChangeProfileInformation(UserDTO userDTO)
         {
             ApplicationUser user = await Database.UserManager.FindByIdAsync(userDTO.Id);
             if (user == null) throw new ValidationException("User is not found", userDTO.Id);
@@ -190,7 +186,6 @@ namespace Qwerty.BLL.Services
             profile.Email = userDTO.Email;
             Database.ProfileManager.Update(profile);
             await Database.SaveAsync();
-            return new OperationDetails(true, "User successfully changed", "UserProfile");
         }
 
 
@@ -283,7 +278,7 @@ namespace Qwerty.BLL.Services
         }
 
 
-        public async Task<OperationDetails> UploadImage(string ImageUrl, string UserName)
+        public async Task UploadImage(string ImageUrl, string UserName)
         {
             ApplicationUser user = await Database.UserManager.FindByNameAsync(UserName);
             if (user == null) throw new ValidationException("User is not found", UserName);
@@ -291,7 +286,6 @@ namespace Qwerty.BLL.Services
             profile.ImageUrl = ImageUrl;
             Database.ProfileManager.Update(profile);
             await Database.SaveAsync();
-            return new OperationDetails(true, ImageUrl, "profile");
         }
 
         public async Task<IList<string>> GetRolesByUserId(string id)

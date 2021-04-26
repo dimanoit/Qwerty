@@ -18,13 +18,12 @@ namespace Qwerty.BLL.Services
         {
             _database = uow;
         }
-        public async Task<OperationDetails> DeleteMessage(int MessageId)
+        public async Task DeleteMessage(int MessageId)
         {
             Message messageToDelete = _database.MessageManager.Get(MessageId);
-            if (messageToDelete == null) throw new ValidationException("There is no such message.",MessageId.ToString());
+            if (messageToDelete == null) throw new ValidationException("There is no such message.", MessageId.ToString());
             _database.MessageManager.Delete(MessageId);
             await _database.SaveAsync();
-            return new OperationDetails(true, "Succses deleted", "message");
         }
         public MessageDTO GetMessage(int MessageId)
         {
@@ -33,15 +32,14 @@ namespace Qwerty.BLL.Services
             if (messageBoof != null) message = Mapper.Map<Message, MessageDTO>(messageBoof);
             return message;
         }
-        public async Task<OperationDetails> Send(MessageDTO messageDTO)
+        public async Task Send(MessageDTO messageDTO)
         {
-            if(messageDTO == null) throw new ValidationException("This is message empty.", "message");
+            if (messageDTO == null) throw new ValidationException("This is message empty.", "message");
             Message message = _database.MessageManager.Get(messageDTO.IdMessage);
             if (message != null) throw new ValidationException("This is message already exist", "message");
             message = Mapper.Map<MessageDTO, Message>(messageDTO);
             _database.MessageManager.Create(message);
             await _database.SaveAsync();
-            return new OperationDetails(true, "Message sended successfully", "message");
 
         }
         public async Task<IEnumerable<MessageDTO>> GetLastMessages(string RecipientUserId)

@@ -41,9 +41,9 @@ namespace Qwerty.WEB.Controllers
                 Surname = model.SurName,
                 Roles = new string[] {QwertyRoles.User}
             };
-            OperationDetails operationDetails = await _userService.CreateUserAsync(userDto);
-            Log.Information($"User {userDto.UserName} has been registered");
-            return Ok(operationDetails);
+
+            await _userService.CreateUserAsync(userDto);
+            return Ok();
         }
 
         [ModelValidationFilter]
@@ -58,9 +58,10 @@ namespace Qwerty.WEB.Controllers
 
         [ModelValidationFilter]
         [HttpGet("without-friends/{userId}")]
-        public async Task<IActionResult> GetAllAccountsWithoutFriends(string userId, [FromQuery] FindUserViewModel findUser)
+        public async Task<IActionResult> GetAllAccountsWithoutFriends(string userId,
+            [FromQuery] FindUserViewModel findUser)
         {
-            var result =  await  _userService.GetUsersWithoutFriends(new UserSearchParametersDto
+            var result = await _userService.GetUsersWithoutFriends(new UserSearchParametersDto
             {
                 City = findUser.City,
                 Country = findUser.Country,
@@ -69,7 +70,7 @@ namespace Qwerty.WEB.Controllers
                 ExceptFriends = true,
                 CurrentUserId = userId
             });
-            
+
             return Ok(result);
         }
 
@@ -110,9 +111,8 @@ namespace Qwerty.WEB.Controllers
                 postedFile.CopyTo(stream);
             }
 
-            OperationDetails operationDetails = await _userService.UploadImage(imageUrl, user.UserName);
-            Log.Information($"User {user.Id} changed image. New image {imageUrl}");
-            return Ok(operationDetails);
+            await _userService.UploadImage(imageUrl, user.UserName);
+            return Ok();
         }
 
         [ModelValidationFilter]
@@ -131,8 +131,8 @@ namespace Qwerty.WEB.Controllers
                 Id = userModel.UserId
             };
 
-            var operationDetails = await _userService.ChangeProfileInformation(user);
-            return Ok(operationDetails);
+            await _userService.ChangeProfileInformation(user);
+            return Ok();
         }
 
         [HttpGet]

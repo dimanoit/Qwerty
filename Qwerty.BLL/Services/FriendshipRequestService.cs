@@ -19,11 +19,10 @@ namespace Qwerty.BLL.Services
             _database = uow;
         }
 
-        public async Task<OperationDetails> DeleteRequest(string SenderUserId, string RecipientUserId)
+        public async Task DeleteRequest(string SenderUserId, string RecipientUserId)
         {
             _database.RequestManager.Delete(RecipientUserId, SenderUserId);
             await _database.SaveAsync();
-            return new OperationDetails(true, "Succses deleted", "request");
         }
 
         public FriendshipRequestDTO GetRequest(string SenderUserId, string RecipientUserId)
@@ -35,7 +34,7 @@ namespace Qwerty.BLL.Services
             return requestDTO;
         }
 
-        public async Task<OperationDetails> Send(FriendshipRequestDTO friendshipRequesDTO)
+        public async Task Send(FriendshipRequestDTO friendshipRequesDTO)
         {
             var requestFromMe =
                 _database.RequestManager.Get(friendshipRequesDTO.RecipientUserId, friendshipRequesDTO.SenderUserId);
@@ -58,7 +57,6 @@ namespace Qwerty.BLL.Services
             _database.RequestManager.Create(newRequest);
             await _database.SaveAsync();
 
-            return new OperationDetails(true, "Request sent successfully", "message");
         }
 
         public async Task<IEnumerable<FriendshipRequestDTO>> GetAllRequests(string SenderUserId)
