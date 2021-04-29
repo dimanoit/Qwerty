@@ -7,6 +7,8 @@ namespace Qwerty.DAL.Entities
     {
         [ForeignKey("ApplicationUser")]
         public string UserId { get; set; }
+        
+        // TODO delete this field we can't save user passwords
         public string Password { get; set; }
         public string Login { get; set; }
         public virtual UserProfile UserProfile { get; set; }

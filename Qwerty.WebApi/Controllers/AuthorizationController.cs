@@ -55,7 +55,7 @@ namespace Qwerty.WebApi.Controllers
 
         private async Task<ClaimsIdentity> GetIdentity(string username, string password)
         {
-            var user = await _userService.FindUserAsync(username, password);
+            var user = await _userService.LoginAsync(username, password);
             if (user != null)
             {
                 var claims = new List<Claim>

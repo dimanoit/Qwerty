@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Qwerty.DAL.EF;
+using Qwerty.DAL.Identity;
 
 namespace Qwerty.BLL.Services
 {
@@ -18,85 +19,102 @@ namespace Qwerty.BLL.Services
 
         //TODO create context for write and read
         private readonly ApplicationContext _appContext;
+        private readonly ApplicationUserManager _userManager;
 
-        public UserService(IUnitOfWork uow, ApplicationContext appContext)
+        public UserService(IUnitOfWork uow, ApplicationContext appContext, ApplicationUserManager userManager)
         {
             Database = uow;
             _appContext = appContext;
+            _userManager = userManager;
         }
 
-        public async Task CreateUserAsync(UserDTO userDto)
+        public async Task CreateAsync(UserDTO userDto, string password)
         {
             if (userDto == null)
             {
+                // TODO Integrate Fluent Validation to validate DTOs 
                 throw new ValidationException("UserDTO was null", "");
             }
 
-            ApplicationUser user = await Database.UserManager.FindByNameAsync(userDto.UserName);
+            var user = await _userManager.FindByNameAsync(userDto.UserName);
             if (user != null)
             {
+                // TODO Create Domain Entity with all validation logic(made user processing through DDD concept)
                 throw new ValidationException("User with this login already exists", userDto.UserName);
             }
 
-            user = new ApplicationUser { UserName = userDto.UserName };
-            var result = await Database.UserManager.CreateAsync(user, userDto.Password);
+            user = new ApplicationUser
+            {
+                UserName = userDto.UserName
+            };
+
+            // TODO make user creation process in single transaction 
+            var result = await _userManager.CreateAsync(user, password);
+
             if (result.Errors.Any())
             {
+                var errorsDescriptions = result.Errors.Select(e => e.Description);
+                var joinedError = string.Join(',', errorsDescriptions);
+                throw new ValidationException(joinedError);
             }
 
             if (userDto.Roles.Any())
             {
                 foreach (var role in userDto.Roles)
                 {
-                    await Database.UserManager.AddToRoleAsync(user, role);
+                    await _userManager.AddToRoleAsync(user, role);
                 }
             }
 
-            User Quser = new User
+            var qUser = new User
             {
                 ApplicationUser = user,
                 Login = user.UserName,
-                Password = userDto.Password,
                 UserId = user.Id
             };
 
-            UserProfile profile = new UserProfile()
+            var profile = new UserProfile
             {
-                UserId = Quser.UserId,
-                User = Quser,
+                UserId = qUser.UserId,
+                User = qUser,
                 Name = userDto.Name,
                 Surname = userDto.Surname
             };
 
-            Database.ProfileManager.Create(profile);
-            Database.QUserManager.Create(Quser);
+            _appContext.Profiles.Add(profile);
+            _appContext.QUsers.Add(qUser);
 
             await Database.SaveAsync();
-
         }
 
-        public async Task<UserDTO> FindUserAsync(string userName, string password)
+        public async Task<UserDTO> LoginAsync(string userName, string password)
         {
-            ApplicationUser user = await Database.UserManager.FindByNameAsync(userName);
-            if (user?.User.Password.Trim() == password)
+            var user = await _userManager.FindByNameAsync(userName);
+            if (user == null)
             {
-                UserProfile profile = user.User.UserProfile;
-                return new UserDTO()
-                {
-                    Name = profile.Name,
-                    Password = password,
-                    AboutUrl = profile.AboutUrl,
-                    City = profile.City,
-                    Country = profile.Country,
-                    Email = profile.Email,
-                    Id = user.Id,
-                    ImageUrl = profile.ImageUrl,
-                    Phone = profile.Phone,
-                    Surname = profile.Surname,
-                    UserName = userName
-                };
+                throw new ValidationException($"User with login - {userName} doesn't exist");
             }
-            else return null;
+
+            var isPasswordCorrect = await _userManager.CheckPasswordAsync(user, password);
+            if (!isPasswordCorrect)
+            {
+                throw new ValidationException("Password incorrect");
+            }
+
+            var userProfile = await _appContext.Profiles.FirstAsync(u => u.UserId == user.Id);
+            return new UserDTO
+            {
+                Name = userProfile.Name,
+                AboutUrl = userProfile.AboutUrl,
+                City = userProfile.City,
+                Country = userProfile.Country,
+                Email = userProfile.Email,
+                Id = user.Id,
+                ImageUrl = userProfile.ImageUrl,
+                Phone = userProfile.Phone,
+                Surname = userProfile.Surname,
+                UserName = userName
+            };
         }
 
         public UserDTO FindUserByUsername(string UserName)
@@ -118,7 +136,6 @@ namespace Qwerty.BLL.Services
                 Phone = profile.Phone,
                 Surname = profile.Surname,
                 UserName = UserName,
-                Password = profile.User.Password
             };
         }
 
@@ -139,7 +156,6 @@ namespace Qwerty.BLL.Services
                 Phone = profile.Phone,
                 Surname = profile.Surname,
                 UserName = user.UserName,
-                Password = profile.User.Password
             };
         }
 

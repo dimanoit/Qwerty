@@ -32,14 +32,13 @@ namespace Qwerty.WEB.Controllers
         {
             UserDTO userDto = new UserDTO
             {
-                Password = model.Password,
                 UserName = model.UserName,
                 Name = model.Name,
                 Surname = model.SurName,
                 Roles = new string[] {QwertyRoles.User}
             };
 
-            await _userService.CreateUserAsync(userDto);
+            await _userService.CreateAsync(userDto, model.Password);
             return Ok();
         }
 

@@ -87,7 +87,6 @@ namespace Qwerty.BLL.Services
                 ImageUrl = f.ImageUrl,
                 Phone = f.Phone,
                 Surname = f.Surname,
-                Password = f.User.Password
             }).ToListAsync();
         }
 

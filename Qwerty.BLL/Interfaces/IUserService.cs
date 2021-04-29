@@ -6,8 +6,8 @@ namespace Qwerty.BLL.Interfaces
 {
     public interface IUserService
     {
-        Task CreateUserAsync(UserDTO userDto);
-        Task<UserDTO> FindUserAsync(string UserName, string Password);
+        Task CreateAsync(UserDTO userDto, string password);
+        Task<UserDTO> LoginAsync(string UserName, string Password);
         Task ChangeProfileInformation(UserDTO userDTO);
         Task<IEnumerable<UserDTO>> GetUsers(string Name = null, string Surname = null, string Country = null, string City = null);
         UserDTO FindUserByUsername(string UserName);
