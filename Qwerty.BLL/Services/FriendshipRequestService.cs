@@ -1,98 +1,72 @@
 ﻿using AutoMapper;
 using Qwerty.BLL.DTO;
-using Qwerty.BLL.Infrastructure;
 using Qwerty.BLL.Interfaces;
 using Qwerty.DAL.Entities;
-using Qwerty.DAL.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper.QueryableExtensions;
+using Microsoft.EntityFrameworkCore;
+using Qwerty.DAL.EF;
 
 namespace Qwerty.BLL.Services
 {
-    public class FriendshipRequestService : IFriendshipRequestService, IDisposable
+    public class FriendshipRequestService : IFriendshipRequestService
     {
-        private IUnitOfWork _database;
+        private readonly ApplicationContext _applicationContext;
 
-        public FriendshipRequestService(IUnitOfWork uow)
+        public FriendshipRequestService(ApplicationContext applicationContext)
         {
-            _database = uow;
+            _applicationContext = applicationContext;
         }
 
-        public async Task DeleteRequest(string SenderUserId, string RecipientUserId)
+        public async Task Delete(string senderId, string recipientId)
         {
-            _database.RequestManager.Delete(RecipientUserId, SenderUserId);
-            await _database.SaveAsync();
+            var request = await _applicationContext.Requests.FirstOrDefaultAsync(r =>
+                r.SenderUserId == senderId && r.RecipientUserId == recipientId);
+
+            if (request == null)
+            {
+                return;
+            }
+
+            _applicationContext.Requests.Remove(request);
+            await _applicationContext.SaveChangesAsync();
         }
 
-        public FriendshipRequestDTO GetRequest(string SenderUserId, string RecipientUserId)
+        public async Task<FriendshipRequestDTO> Get(string senderId, string recipientId)
         {
-            FriendshipRequestDTO requestDTO = null;
-            FriendshipRequest request = _database.RequestManager.Get(RecipientUserId, SenderUserId);
+            var request = await _applicationContext.Requests.FirstOrDefaultAsync(r =>
+                r.SenderUserId == senderId && r.RecipientUserId == recipientId);
+
+            return request == null ? null : Mapper.Map<FriendshipRequest, FriendshipRequestDTO>(request);
+        }
+        
+        public async Task<IEnumerable<FriendshipRequestDTO>> GetAll(string userId)
+        {
+            return await _applicationContext.Requests
+                .Where(r => r.SenderUserId == userId || r.RecipientUserId == userId)
+                .ProjectTo<FriendshipRequestDTO>(Mapper.Configuration)
+                .ToListAsync();
+        }
+
+        public async Task Send(FriendshipRequestDTO friendshipRequestDto)
+        {
+            var request = await Get(friendshipRequestDto.RecipientUserId, friendshipRequestDto.SenderUserId);
             if (request != null)
-                requestDTO = Mapper.Map<FriendshipRequest, FriendshipRequestDTO>(request);
-            return requestDTO;
-        }
-
-        public async Task Send(FriendshipRequestDTO friendshipRequesDTO)
-        {
-            var requestFromMe =
-                _database.RequestManager.Get(friendshipRequesDTO.RecipientUserId, friendshipRequesDTO.SenderUserId);
-            if (requestFromMe != null)
             {
-                throw new ValidationException("This is request already exist", "message");
+                return;
             }
 
-            var requestToMe =
-                _database.RequestManager.Get(friendshipRequesDTO.SenderUserId, friendshipRequesDTO.RecipientUserId);
-            if (requestToMe != null)
-            {
-                throw new ValidationException("This is request already exist", "message");
-            }
-
-            var newRequest = Mapper.Map<FriendshipRequestDTO, FriendshipRequest>(friendshipRequesDTO);
+            var newRequest = Mapper.Map<FriendshipRequestDTO, FriendshipRequest>(friendshipRequestDto);
             newRequest.Status = FriendshipRequestStatus.Sent;
             newRequest.TimeSent = DateTime.Now;
 
-            _database.RequestManager.Create(newRequest);
-            await _database.SaveAsync();
-
+            _applicationContext.Requests.Add(newRequest);
+            await _applicationContext.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<FriendshipRequestDTO>> GetAllRequests(string SenderUserId)
-        {
-            ICollection<FriendshipRequestDTO> requestDTO = null;
-            await Task.Run(() =>
-            {
-                User user = _database.QUserManager.Get(SenderUserId);
-                if (user != null)
-                {
-                    var ReciveRequests = user.ReceiveFriendshipRequests;
-                    var SendRequest = user.SendFriendshipRequests;
-                    if (ReciveRequests != null || SendRequest != null) requestDTO = new List<FriendshipRequestDTO>();
-                    if (ReciveRequests != null)
-                    {
-                        foreach (var el in ReciveRequests)
-                        {
-                            requestDTO.Add(Mapper.Map<FriendshipRequest, FriendshipRequestDTO>(el));
-                        }
-                    }
-
-                    if (SendRequest != null)
-                    {
-                        foreach (var el in SendRequest)
-                        {
-                            requestDTO.Add(Mapper.Map<FriendshipRequest, FriendshipRequestDTO>(el));
-                        }
-                    }
-                }
-            });
-            return requestDTO;
-        }
-
-        public void Dispose()
-        {
-            _database.Dispose();
-        }
+      
     }
 }

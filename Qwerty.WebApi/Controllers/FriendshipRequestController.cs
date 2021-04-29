@@ -1,24 +1,24 @@
-﻿using AutoMapper;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Qwerty.BLL.DTO;
 using Qwerty.BLL.Interfaces;
 using Qwerty.WEB.Models;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Qwerty.WebApi.Filters;
 using Serilog;
 
-namespace Qwerty.WEB.Controllers
+namespace Qwerty.WebApi.Controllers
 {
     [Authorize(Roles = "user", AuthenticationSchemes = "Bearer")]
     [Route("api/[controller]")]
     [ApiController]
     public class FriendshipRequestController : ControllerBase
     {
-        private IUserService _userService;
-        private IFriendService _friendService;
-        private IFriendshipRequestService _friendshipRequestService;
+        private readonly IUserService _userService;
+        private readonly IFriendService _friendService;
+        private readonly IFriendshipRequestService _friendshipRequestService;
 
         public FriendshipRequestController(IFriendService friendService,
             IFriendshipRequestService friendshipRequestService, IUserService userService)
@@ -32,8 +32,6 @@ namespace Qwerty.WEB.Controllers
         public async Task<ActionResult> SendFriendshipRequest(
             [FromBody] FriendshipRequestViewModel friendshipRequestViewModel)
         {
-            var recipient = await _userService.FindUserByIdAsync(friendshipRequestViewModel.RecipientUserId);
-
             var friendship = await _friendService.GetFriendship(friendshipRequestViewModel.RecipientUserId,
                 friendshipRequestViewModel.SenderUserId);
 
@@ -56,7 +54,7 @@ namespace Qwerty.WEB.Controllers
         [CheckCurrentUserFilter]
         public async Task<ActionResult> GetAllRequests(string userId)
         {
-            var requests = await _friendshipRequestService.GetAllRequests(userId);
+            var requests = await _friendshipRequestService.GetAll(userId);
             if (requests == null)
             {
                 Log.Warning($"User {userId} dont have friend requests");
