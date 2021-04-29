@@ -41,7 +41,7 @@ namespace Qwerty.WEB.Controllers
         [Route("{messageId}")]
         public async Task<ActionResult> DeleteMessage(int messageId)
         {
-            await _messageService.DeleteMessage(messageId);
+            await _messageService.Delete(messageId);
             return Ok();
         }
 
@@ -50,7 +50,7 @@ namespace Qwerty.WEB.Controllers
         [CheckCurrentUserFilter]
         public async Task<ActionResult> GetAllDialogs(string userId)
         {
-            var Messages = await _messageService.GetLastMessages(userId);
+            var Messages = await _messageService.GetLatest(userId);
             List<DialogViewModel> dialogs = null;
             if (Messages == null)
             {
@@ -108,14 +108,15 @@ namespace Qwerty.WEB.Controllers
         [Route("{userId}/messages/{senderId}")]
         [HttpGet]
         [CheckCurrentUserFilter]
-        public async Task<ActionResult> GetAllMessageFromSender(string userId, string SenderId)
+        public async Task<ActionResult> GetAllMessageFromSender(string userId, string senderId)
         {
-            UserDTO Sender = await _userService.FindUserByIdAsync(SenderId);
+            
+            UserDTO Sender = await _userService.FindUserByIdAsync(senderId);
             List<MessageViewModel> AllMessages = null;
-            var MessagesDTO = await _messageService.GetAllMessagesFromDialog(Sender.Id, userId);
+            var MessagesDTO = await _messageService.GetAllFromDialog(Sender.Id, userId);
             if (MessagesDTO == null)
             {
-                Log.Warning($"User {userId} have no messages from {SenderId}");
+                Log.Warning($"User {userId} have no messages from {senderId}");
                 return BadRequest("You have no messages with this user.");
             }
 

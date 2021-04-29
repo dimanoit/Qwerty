@@ -6,10 +6,10 @@ namespace Qwerty.BLL.Interfaces
 {
     public interface IMessageService
     {
-        Task Send(MessageDTO messageDTO);
-        MessageDTO GetMessage(int MessageID);
-        Task DeleteMessage(int MessageID);
-        Task<IEnumerable<MessageDTO>> GetLastMessages(string RecipientUserId);
-        Task<IEnumerable<MessageDTO>> GetAllMessagesFromDialog(string SenderId, string RecepientId);
+        Task Send(MessageDTO messageDto);
+        Task<MessageDTO> Get(int messageId);
+        Task Delete(int messageId);
+        Task<IEnumerable<MessageDTO>> GetLatest(string recipientId);
+        Task<IEnumerable<MessageDTO>> GetAllFromDialog(string senderId, string recipientId);
     }
 }
