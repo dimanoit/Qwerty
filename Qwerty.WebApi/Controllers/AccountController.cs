@@ -47,10 +47,7 @@ namespace Qwerty.WEB.Controllers
         [HttpGet]
         public async Task<ActionResult> GetAllAccounts([FromQuery] FindUserViewModel findUser)
         {
-            IEnumerable<UserDTO> users = await _userService
-                .GetUsers(findUser?.Name, findUser?.Surname, findUser?.Country, findUser?.City);
-            var user = await _userService.FindByIdAsync(User.Identity.Name);
-            return Ok(users.Where(x => x.Id != user.Id));
+            throw new NotImplementedException();
         }
 
         [ModelValidationFilter]
