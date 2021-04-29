@@ -6,6 +6,7 @@ using Qwerty.DAL.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Qwerty.DAL.EF;
@@ -28,6 +29,7 @@ namespace Qwerty.BLL.Services
             _userManager = userManager;
         }
 
+        // TODO refactor this method 
         public async Task CreateAsync(UserDTO userDto, string password)
         {
             if (userDto == null)
@@ -117,48 +119,6 @@ namespace Qwerty.BLL.Services
             };
         }
 
-        public UserDTO FindUserByUsername(string UserName)
-        {
-            User qUser = Database.QUserManager.GetAll().Where(x => x.ApplicationUser.UserName == UserName)
-                .FirstOrDefault();
-            ApplicationUser user = qUser.ApplicationUser;
-            if (user == null) throw new ValidationException("User is not found", UserName);
-            UserProfile profile = user.User.UserProfile;
-            return new UserDTO()
-            {
-                Name = profile.Name,
-                AboutUrl = profile.AboutUrl,
-                City = profile.City,
-                Country = profile.Country,
-                Email = profile.Email,
-                Id = user.Id,
-                ImageUrl = profile.ImageUrl,
-                Phone = profile.Phone,
-                Surname = profile.Surname,
-                UserName = UserName,
-            };
-        }
-
-        public async Task<UserDTO> FindUserByIdAsync(string UserId)
-        {
-            ApplicationUser user = await Database.UserManager.FindByIdAsync(UserId);
-            if (user == null) throw new ValidationException("User is not found", UserId);
-            UserProfile profile = user.User.UserProfile;
-            return new UserDTO()
-            {
-                Name = profile.Name,
-                AboutUrl = profile.AboutUrl,
-                City = profile.City,
-                Country = profile.Country,
-                Email = profile.Email,
-                Id = user.Id,
-                ImageUrl = profile.ImageUrl,
-                Phone = profile.Phone,
-                Surname = profile.Surname,
-                UserName = user.UserName,
-            };
-        }
-
         public async Task DeleteUser(string userId)
         {
             ApplicationUser user = await Database.UserManager.FindByIdAsync(userId);
@@ -203,41 +163,7 @@ namespace Qwerty.BLL.Services
             Database.ProfileManager.Update(profile);
             await Database.SaveAsync();
         }
-
-
-        public async Task<IEnumerable<UserDTO>> GetUsers(string Name = null, string Surname = null,
-            string Country = null, string City = null)
-        {
-            List<UserDTO> FindedUsers = null;
-            var profiles = Database.ProfileManager.GetAll();
-            if (Name != null) profiles = profiles.Where(x => x.Name.Contains(Name));
-            if (Surname != null) profiles = profiles.Where(x => x.Surname.Contains(Surname));
-            if (Country != null) profiles = profiles.Where(x => x.Country == Country);
-            if (City != null) profiles = profiles.Where(x => x.City == City);
-            if (profiles != null)
-            {
-                FindedUsers = new List<UserDTO>();
-                foreach (var profile in profiles)
-                {
-                    FindedUsers.Add(new UserDTO()
-                    {
-                        Name = profile.Name,
-                        AboutUrl = profile.AboutUrl,
-                        City = profile.City,
-                        Country = profile.Country,
-                        Email = profile.Email,
-                        Id = profile.UserId,
-                        ImageUrl = profile.ImageUrl,
-                        Phone = profile.Phone,
-                        Surname = profile.Surname,
-                        Roles = GetRolesByUserId(profile.UserId).Result.ToArray()
-                    });
-                }
-            }
-
-            return FindedUsers;
-        }
-
+     
         public async Task<IEnumerable<UserDTO>> GetUsersWithoutFriends(UserSearchParametersDto searchParameters)
         {
             var baseQuery = _appContext.Profiles.AsQueryable();
@@ -294,20 +220,45 @@ namespace Qwerty.BLL.Services
         }
 
 
-        public async Task UploadImage(string ImageUrl, string UserName)
+        public async Task UploadImage(string imageUrl, string userName)
         {
-            ApplicationUser user = await Database.UserManager.FindByNameAsync(UserName);
-            if (user == null) throw new ValidationException("User is not found", UserName);
-            UserProfile profile = user.User.UserProfile;
-            profile.ImageUrl = ImageUrl;
-            Database.ProfileManager.Update(profile);
-            await Database.SaveAsync();
+            // TODO add azure blob storage
+            throw new NotImplementedException();
         }
 
         public async Task<IList<string>> GetRolesByUserId(string id)
         {
-            ApplicationUser user = await Database.UserManager.FindByIdAsync(id);
-            return await Database.UserManager.GetRolesAsync(user);
+            var user = await _userManager.FindByIdAsync(id);
+            return await _userManager.GetRolesAsync(user);
+        }
+
+        public async Task<UserDTO> FindAsync(string userName) =>
+            await FindAsync(u => u.UserName == userName);
+
+        public async Task<UserDTO> FindByIdAsync(string userId) =>
+            await FindAsync(u => u.Id == userId);
+
+        private async Task<UserDTO> FindAsync(Expression<Func<ApplicationUser, bool>> expression)
+        {
+            var profile = await _appContext.Users
+                .Where(expression)
+                .Join(_appContext.Profiles, u => u.Id, p => p.UserId, (u, p) => p)
+                .FirstOrDefaultAsync();
+
+            return profile == null
+                ? null
+                : new UserDTO
+                {
+                    Name = profile.Name,
+                    AboutUrl = profile.AboutUrl,
+                    City = profile.City,
+                    Country = profile.Country,
+                    Email = profile.Email,
+                    Id = profile.UserId,
+                    ImageUrl = profile.ImageUrl,
+                    Phone = profile.Phone,
+                    Surname = profile.Surname
+                };
         }
 
 

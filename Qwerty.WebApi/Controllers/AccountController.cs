@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Qwerty.WEB.Models;
 using Qwerty.BLL.Interfaces;
@@ -48,7 +49,7 @@ namespace Qwerty.WEB.Controllers
         {
             IEnumerable<UserDTO> users = await _userService
                 .GetUsers(findUser?.Name, findUser?.Surname, findUser?.Country, findUser?.City);
-            var user = await _userService.FindUserByIdAsync(User.Identity.Name);
+            var user = await _userService.FindByIdAsync(User.Identity.Name);
             return Ok(users.Where(x => x.Id != user.Id));
         }
 
@@ -85,7 +86,8 @@ namespace Qwerty.WEB.Controllers
         [Route("{userId}/uploadImage")]
         public async Task<ActionResult> UploadImage(string userId)
         {
-            var user = await _userService.FindUserByIdAsync(userId);
+            throw new NotImplementedException();
+            var user = await _userService.FindByIdAsync(userId);
             var postedFile = Request.Form.Files["Image"];
             if (postedFile == null)
             {
@@ -136,7 +138,7 @@ namespace Qwerty.WEB.Controllers
         [CheckCurrentUserFilter]
         public async Task<ActionResult> GetUser(string userId)
         {
-            var user = await _userService.FindUserByIdAsync(userId);
+            var user = await _userService.FindByIdAsync(userId);
             return Ok(user);
         }
     }

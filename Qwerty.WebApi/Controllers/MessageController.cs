@@ -64,11 +64,11 @@ namespace Qwerty.WEB.Controllers
                 UserDTO MessageUser = null;
                 if (el.IdSender == userId)
                 {
-                    MessageUser = await _userService.FindUserByIdAsync(el.IdRecipient);
+                    MessageUser = await _userService.FindByIdAsync(el.IdRecipient);
                 }
                 else
                 {
-                    MessageUser = await _userService.FindUserByIdAsync(el.IdSender);
+                    MessageUser = await _userService.FindByIdAsync(el.IdSender);
                 }
 
                 dialogs.Add(new DialogViewModel
@@ -111,7 +111,7 @@ namespace Qwerty.WEB.Controllers
         public async Task<ActionResult> GetAllMessageFromSender(string userId, string senderId)
         {
             
-            UserDTO Sender = await _userService.FindUserByIdAsync(senderId);
+            UserDTO Sender = await _userService.FindByIdAsync(senderId);
             List<MessageViewModel> AllMessages = null;
             var MessagesDTO = await _messageService.GetAllFromDialog(Sender.Id, userId);
             if (MessagesDTO == null)

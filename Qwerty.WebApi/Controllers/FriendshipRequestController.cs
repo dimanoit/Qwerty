@@ -67,11 +67,11 @@ namespace Qwerty.WebApi.Controllers
                 UserDTO profile;
                 if (el.SenderUserId == userId)
                 {
-                    profile = await _userService.FindUserByIdAsync(el.RecipientUserId);
+                    profile = await _userService.FindByIdAsync(el.RecipientUserId);
                 }
                 else
                 {
-                    profile = await _userService.FindUserByIdAsync(el.SenderUserId);
+                    profile = await _userService.FindByIdAsync(el.SenderUserId);
                 }
 
                 requestProfiles.Add(new RequestProfile()

@@ -1,4 +1,5 @@
-﻿using Qwerty.BLL.DTO;
+﻿using System;
+using Qwerty.BLL.DTO;
 using Qwerty.BLL.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
@@ -61,15 +62,7 @@ namespace Qwerty.WEB.Controllers
         [HttpGet]
         public async Task<ActionResult> GetAllUserWithBlockedStatus()
         {
-            var user = await _userService.FindUserByIdAsync(HttpContext.User.Identity.Name);
-            IEnumerable<UserDTO> users = await _userService.GetUsers();
-            if (users == null)
-            {
-                Log.Warning("Social network without people");
-                return BadRequest("Social network without people");
-            }
-
-            return Ok(users.Where(x => x.Id != user.Id));
+            throw new NotImplementedException();
         }
     }
 }
