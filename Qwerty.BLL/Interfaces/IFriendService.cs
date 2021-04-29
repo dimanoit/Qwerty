@@ -7,9 +7,9 @@ namespace Qwerty.BLL.Interfaces
 {
     public interface IFriendService
     {
-        Task DeleteFriend(string firstUserId, string secondUserId);
-        Task<IEnumerable<UserDTO>> GetFriendsProfiles(string userId);
-        Task AcceptFriend(string senderId, string recipientId);
-        Task<UserFriends> GetFriendship(string firstUserId, string secondUserId);
+        Task Delete(string firstUserId, string secondUserId);
+        Task<IEnumerable<UserDTO>> GetProfiles(string userId);
+        Task Accept(string senderId, string recipientId);
+        Task<UserFriends> Get(string firstUserId, string secondUserId);
     }
 }

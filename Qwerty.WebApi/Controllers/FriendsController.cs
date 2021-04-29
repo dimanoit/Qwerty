@@ -28,7 +28,7 @@ namespace Qwerty.WEB.Controllers
         [CheckCurrentUserFilter]
         public async Task<ActionResult> GetAllFriendsAccounts(string userId)
         {
-            IEnumerable<UserDTO> friends = await _friendService.GetFriendsProfiles(userId);
+            IEnumerable<UserDTO> friends = await _friendService.GetProfiles(userId);
             return Ok(friends);
         }
 
@@ -36,7 +36,7 @@ namespace Qwerty.WEB.Controllers
         [Route("{senderId}/friend/{recipientId}")]
         public async Task AcceptFriend(string senderId, string recipientId)
         {
-             await _friendService.AcceptFriend(senderId, recipientId);
+             await _friendService.Accept(senderId, recipientId);
         }
     }
 }

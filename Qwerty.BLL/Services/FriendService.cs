@@ -20,9 +20,9 @@ namespace Qwerty.BLL.Services
             _appContext = appContext;
         }
 
-        public async Task DeleteFriend(string firstUserId, string secondUserId)
+        public async Task Delete(string firstUserId, string secondUserId)
         {
-            var friendship = await GetFriendship(firstUserId, secondUserId);
+            var friendship = await Get(firstUserId, secondUserId);
             
             if (friendship != null)
             {
@@ -32,9 +32,9 @@ namespace Qwerty.BLL.Services
             await _appContext.SaveChangesAsync();
         }
 
-        public async Task AcceptFriend(string senderId, string recipientId)
+        public async Task Accept(string senderId, string recipientId)
         {
-            var friendShip = await GetFriendship(senderId, recipientId);
+            var friendShip = await Get(senderId, recipientId);
             if (friendShip != null)
             {
                 throw new ValidationException("This user already your friend", recipientId);
@@ -60,7 +60,7 @@ namespace Qwerty.BLL.Services
             await _appContext.SaveChangesAsync();
         }
 
-        public async Task<UserFriends> GetFriendship(string firstUserId, string secondUserId)
+        public async Task<UserFriends> Get(string firstUserId, string secondUserId)
         {
             return await _appContext.UserFriends.FirstOrDefaultAsync(uf =>
                 (uf.FriendId == firstUserId && uf.UserId == secondUserId) ||
@@ -68,7 +68,7 @@ namespace Qwerty.BLL.Services
             );
         }
 
-        public async Task<IEnumerable<UserDTO>> GetFriendsProfiles(string userId)
+        public async Task<IEnumerable<UserDTO>> GetProfiles(string userId)
         {
             var friends = from p in _appContext.Profiles
                 join uf in _appContext.UserFriends

@@ -32,7 +32,7 @@ namespace Qwerty.WebApi.Controllers
         public async Task<ActionResult> SendFriendshipRequest(
             [FromBody] FriendshipRequestViewModel friendshipRequestViewModel)
         {
-            var friendship = await _friendService.GetFriendship(friendshipRequestViewModel.RecipientUserId,
+            var friendship = await _friendService.Get(friendshipRequestViewModel.RecipientUserId,
                 friendshipRequestViewModel.SenderUserId);
 
             if (friendship != null)
