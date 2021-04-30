@@ -2,7 +2,6 @@
 using Qwerty.BLL.Infrastructure;
 using Qwerty.BLL.Interfaces;
 using Qwerty.DAL.Entities;
-using Qwerty.DAL.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,17 +13,14 @@ using Qwerty.DAL.Identity;
 
 namespace Qwerty.BLL.Services
 {
-    public class UserService : IUserService, IDisposable
+    public class UserService : IUserService
     {
-        public IUnitOfWork Database { get; set; }
-
         //TODO create context for write and read
         private readonly ApplicationContext _appContext;
         private readonly ApplicationUserManager _userManager;
 
-        public UserService(IUnitOfWork uow, ApplicationContext appContext, ApplicationUserManager userManager)
+        public UserService(ApplicationContext appContext, ApplicationUserManager userManager)
         {
-            Database = uow;
             _appContext = appContext;
             _userManager = userManager;
         }
@@ -86,7 +82,7 @@ namespace Qwerty.BLL.Services
             _appContext.Profiles.Add(profile);
             _appContext.QUsers.Add(qUser);
 
-            await Database.SaveAsync();
+            await _appContext.SaveChangesAsync();
         }
 
         public async Task<UserDTO> LoginAsync(string userName, string password)
@@ -121,49 +117,58 @@ namespace Qwerty.BLL.Services
 
         public async Task DeleteUser(string userId)
         {
-            ApplicationUser user = await Database.UserManager.FindByIdAsync(userId);
-            if (user == null) throw new ValidationException("User not found", "");
-            var UserRoles = this.GetRolesByUserId(userId);
-            if (UserRoles.Result.Contains("deleted") == false)
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
             {
-                await Database.UserManager.AddToRoleAsync(user, "deleted");
+                return;
             }
-            else throw new ValidationException("User already delted", "");
 
-            await Database.SaveAsync();
+            var roles = await GetRolesByUserId(userId);
+            if (roles.Contains(QwertyRoles.Blocked))
+            {
+                return;
+            }
+
+            await _userManager.AddToRoleAsync(user, QwertyRoles.Blocked);
         }
 
         public async Task RestoreAccount(string userId)
         {
-            ApplicationUser user = await Database.UserManager.FindByIdAsync(userId);
-            if (user == null) throw new ValidationException("User not found", "");
-            var UserRoles = this.GetRolesByUserId(userId);
-            if (UserRoles.Result.Contains("deleted") == true)
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
             {
-                await Database.UserManager.RemoveFromRoleAsync(user, "deleted");
+                return;
             }
-            else throw new ValidationException("User not delted", "");
 
-            await Database.SaveAsync();
+            var roles = await GetRolesByUserId(userId);
+            if (!roles.Contains(QwertyRoles.Blocked))
+            {
+                return;
+            }
+
+            await _userManager.RemoveFromRoleAsync(user, QwertyRoles.Blocked);
         }
 
-
-        public async Task ChangeProfileInformation(UserDTO userDTO)
+        public async Task ChangeProfileInformation(UserDTO userDto)
         {
-            ApplicationUser user = await Database.UserManager.FindByIdAsync(userDTO.Id);
-            if (user == null) throw new ValidationException("User is not found", userDTO.Id);
-            UserProfile profile = user.User.UserProfile;
-            profile.Name = userDTO.Name;
-            profile.Surname = userDTO.Surname;
-            profile.Phone = userDTO.Phone;
-            profile.AboutUrl = userDTO.AboutUrl;
-            profile.City = userDTO.City;
-            profile.Country = userDTO.Country;
-            profile.Email = userDTO.Email;
-            Database.ProfileManager.Update(profile);
-            await Database.SaveAsync();
+            var profile = await GetProfileAsync(u => u.Id == userDto.Id);
+            if (profile == null)
+            {
+                throw new InvalidOperationException("This account should by already created");
+            }
+
+            profile.Name = userDto.Name;
+            profile.Surname = userDto.Surname;
+            profile.Phone = userDto.Phone;
+            profile.AboutUrl = userDto.AboutUrl;
+            profile.City = userDto.City;
+            profile.Country = userDto.Country;
+            profile.Email = userDto.Email;
+
+            _appContext.Profiles.Update(profile);
+            await _appContext.SaveChangesAsync();
         }
-     
+
         public async Task<IEnumerable<UserDTO>> GetUsersWithoutFriends(UserSearchParametersDto searchParameters)
         {
             var baseQuery = _appContext.Profiles.AsQueryable();
@@ -219,7 +224,6 @@ namespace Qwerty.BLL.Services
             });
         }
 
-
         public async Task UploadImage(string imageUrl, string userName)
         {
             // TODO add azure blob storage
@@ -240,10 +244,7 @@ namespace Qwerty.BLL.Services
 
         private async Task<UserDTO> FindAsync(Expression<Func<ApplicationUser, bool>> expression)
         {
-            var profile = await _appContext.Users
-                .Where(expression)
-                .Join(_appContext.Profiles, u => u.Id, p => p.UserId, (u, p) => p)
-                .FirstOrDefaultAsync();
+            var profile = await GetProfileAsync(expression);
 
             return profile == null
                 ? null
@@ -261,10 +262,12 @@ namespace Qwerty.BLL.Services
                 };
         }
 
-
-        public void Dispose()
+        private async Task<UserProfile> GetProfileAsync(Expression<Func<ApplicationUser, bool>> expression)
         {
-            Database.Dispose();
+            return await _appContext.Users
+                .Where(expression)
+                .Join(_appContext.Profiles, u => u.Id, p => p.UserId, (u, p) => p)
+                .FirstOrDefaultAsync();
         }
     }
 }

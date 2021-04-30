@@ -8,7 +8,7 @@ namespace Qwerty.BLL.Interfaces
     {
         Task CreateAsync(UserDTO userDto, string password);
         Task<UserDTO> LoginAsync(string UserName, string Password);
-        Task ChangeProfileInformation(UserDTO userDTO);
+        Task ChangeProfileInformation(UserDTO userDto);
         Task<UserDTO> FindAsync(string userName);
         Task UploadImage(string imageUrl, string userName);
         Task<UserDTO> FindByIdAsync(string userId);
