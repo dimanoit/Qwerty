@@ -8,8 +8,6 @@ using Qwerty.BLL.Services;
 using Qwerty.DAL.EF;
 using Qwerty.DAL.Entities;
 using Qwerty.DAL.Identity;
-using Qwerty.DAL.Interfaces;
-using Qwerty.DAL.Repositories;
 using Qwerty.WebApi.InMemoryCache;
 using Qwerty.WebApi.InMemoryCache.Interfaces;
 
@@ -29,7 +27,6 @@ namespace Qwerty.WebApi.Bootstrap
                     options.UseSqlServer(connectionString);
                     options.UseLazyLoadingProxies();
                 });
-            services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IMessageService, MessageService>();
             services.AddScoped<IFriendService, FriendService>();
             services.AddScoped<IFriendshipRequestService, FriendshipRequestService>();

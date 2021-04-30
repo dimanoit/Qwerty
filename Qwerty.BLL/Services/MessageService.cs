@@ -1,7 +1,6 @@
 ﻿using Qwerty.BLL.DTO;
 using Qwerty.BLL.Infrastructure;
 using Qwerty.BLL.Interfaces;
-using Qwerty.DAL.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +17,7 @@ namespace Qwerty.BLL.Services
     {
         private readonly ApplicationContext _applicationContext;
 
-        public MessageService(IUnitOfWork uow, ApplicationContext applicationContext)
+        public MessageService(ApplicationContext applicationContext)
         {
             _applicationContext = applicationContext;
         }
@@ -85,7 +84,8 @@ namespace Qwerty.BLL.Services
         public async Task<IEnumerable<MessageDTO>> GetLatestNew(string recipientId)
         {
             throw new NotImplementedException();
-        }        
+        }
+
         public async Task<IEnumerable<MessageDTO>> GetAllFromDialog(string senderId, string recipientId)
         {
             return await _applicationContext.Messages
