@@ -24,11 +24,6 @@
 
 
   <ItemGroup>
-    <Folder Include="Logs" />
-  </ItemGroup>
-
-
-  <ItemGroup>
     <ProjectReference Include="..\Qwerty.BLL\Qwerty.BLL.csproj" />
     <ProjectReference Include="..\Qwerty.DAL\Qwerty.DAL.csproj" />
   </ItemGroup>
