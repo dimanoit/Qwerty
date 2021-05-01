@@ -4,6 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
     <LangVersion>latestmajor</LangVersion>
+    <RootNamespace>Qwerty.WebApi</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,8 +25,8 @@
 
 
   <ItemGroup>
-    <ProjectReference Include="..\Qwerty.BLL\Qwerty.BLL.csproj" />
-    <ProjectReference Include="..\Qwerty.DAL\Qwerty.DAL.csproj" />
+    <ProjectReference Include="..\Qwerty.Aplication\Qwerty.Aplication.csproj" />
+    <ProjectReference Include="..\Qwerty.Domain\Qwerty.Domain.csproj" />
   </ItemGroup>
 
 </Project>
