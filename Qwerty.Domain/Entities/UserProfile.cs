@@ -1,8 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-
-namespace Qwerty.DAL.Entities
+﻿namespace Qwerty.DAL.Entities
 {
-    [Table("UserProfile")]
     public class UserProfile
     {
         public string UserId { get; set; }
@@ -23,8 +20,8 @@ namespace Qwerty.DAL.Entities
 
         public string Email { get; set; }
 
-        public virtual Friend ProfileAsFriend { get; set; }
+        public Friend ProfileAsFriend { get; set; }
 
-        public virtual User User { get; set; }
+        public User User { get; set; }
     }
 }

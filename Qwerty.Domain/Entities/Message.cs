@@ -9,10 +9,9 @@ namespace Qwerty.DAL.Entities
         public DateTime DateAndTimeMessage { get; set; }
 
         public string IdSender { get; set; }
-        public virtual User SenderUser { get; set; }
+        public User SenderUser { get; set; }
 
         public string IdRecipient { get; set; }
-        public virtual User RecipientUser { get; set; }
-
+        public User RecipientUser { get; set; }
     }
 }

@@ -1,5 +1,4 @@
-﻿
-namespace Qwerty.DAL.Entities
+﻿namespace Qwerty.DAL.Entities
 {
     public class UserFriends
     {
@@ -7,8 +6,8 @@ namespace Qwerty.DAL.Entities
 
         public string FriendId { get; set; }
 
-        public virtual User User { get; set; }
+        public User User { get; set; }
 
-        public virtual Friend Friend { get; set; }
+        public Friend Friend { get; set; }
     }
 }
