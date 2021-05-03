@@ -12,7 +12,6 @@ namespace Qwerty.DAL.EntityConfigurations
             builder.ToTable("Users");
             builder.Property(x => x.UserId).ValueGeneratedNever();
             builder.HasOne(x => x.UserProfile).WithOne(x => x.User).HasForeignKey<User>(user => user.UserId).OnDelete(DeleteBehavior.Restrict);
-            //modelBuilder.Entity<ApplicationUser>().HasOne(x => x.User).WithOne(x => x.ApplicationUser).HasForeignKey<User>(x => x.UserId);
         }
     }
 }
